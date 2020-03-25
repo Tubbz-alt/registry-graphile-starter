@@ -38,7 +38,7 @@ export const deleteTestUsers = () => {
   const pool = poolFromUrl(TEST_DATABASE_URL);
   return pool.query(
     `
-      delete from app_public.users
+      delete from app_public.user
       where username like 'testuser%'
       or username = 'testuser'
       or id in
@@ -104,15 +104,17 @@ export const createUsers = async function createUsers(
         username := $1,
         email := $2,
         email_is_verified := $3,
-        name := $4,
-        avatar_url := $5,
-        password := $6
+        first_name := $4,
+        last_name := $5,
+        avatar_url := $6,
+        password := $7
       )`,
         [
           `testuser_${userLetter}`,
           email,
           verified,
           `User ${userLetter}`,
+          `Test ${userLetter}`,
           null,
           password,
         ]
@@ -137,7 +139,7 @@ export const createSession = async (
   } = await client.query(
     `
       insert into app_private.sessions (user_id)
-      values ($1::int)
+      values ($1::uuid)
       returning *
     `,
     [userId]

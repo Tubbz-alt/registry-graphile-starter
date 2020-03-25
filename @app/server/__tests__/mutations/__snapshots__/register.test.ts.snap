@@ -7,10 +7,11 @@ Object {
       "user": Object {
         "avatarUrl": null,
         "createdAt": "[timestamp]",
+        "firstName": "Test",
         "id": "[id]",
         "isAdmin": false,
         "isVerified": false,
-        "name": "Test User",
+        "lastName": "User",
         "updatedAt": "[timestamp]",
         "username": "testuser",
       },

@@ -2,20 +2,23 @@ mutation Register(
   $username: String!
   $password: String!
   $email: String!
-  $name: String
+  $firstName: String
+  $lastName: String
 ) {
   register(
     input: {
       username: $username
       password: $password
       email: $email
-      name: $name
+      firstName: $firstName
+      lastName: $lastName
     }
   ) {
     user {
       id
       username
-      name
+      firstName
+      lastName
     }
   }
 }

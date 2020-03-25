@@ -1,3 +1,95 @@
+type AccountBalance {
+  burntBalance: Int
+  createdAt: Datetime!
+
+  """
+  Reads a single `CreditVintage` that is related to this `AccountBalance`.
+  """
+  creditVintage: CreditVintage
+  creditVintageId: UUID
+  id: UUID!
+  liquidBalance: Int
+  updatedAt: Datetime
+
+  """Reads a single `Wallet` that is related to this `AccountBalance`."""
+  wallet: Wallet
+  walletId: UUID
+}
+
+"""
+A condition to be used against `AccountBalance` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input AccountBalanceCondition {
+  """Checks for equality with the object’s `creditVintageId` field."""
+  creditVintageId: UUID
+
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `walletId` field."""
+  walletId: UUID
+}
+
+"""An input for mutations affecting `AccountBalance`"""
+input AccountBalanceInput {
+  burntBalance: Int
+  creditVintageId: UUID
+  liquidBalance: Int
+  updatedAt: Datetime
+  walletId: UUID
+}
+
+"""
+Represents an update to a `AccountBalance`. Fields that are set will be updated.
+"""
+input AccountBalancePatch {
+  burntBalance: Int
+  creditVintageId: UUID
+  liquidBalance: Int
+  updatedAt: Datetime
+  walletId: UUID
+}
+
+"""A connection to a list of `AccountBalance` values."""
+type AccountBalancesConnection {
+  """
+  A list of edges which contains the `AccountBalance` and cursor to aid in pagination.
+  """
+  edges: [AccountBalancesEdge!]!
+
+  """A list of `AccountBalance` objects."""
+  nodes: [AccountBalance!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `AccountBalance` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `AccountBalance` edge in the connection."""
+type AccountBalancesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `AccountBalance` at the end of the edge."""
+  node: AccountBalance!
+}
+
+"""Methods to use when ordering `AccountBalance`."""
+enum AccountBalancesOrderBy {
+  CREDIT_VINTAGE_ID_ASC
+  CREDIT_VINTAGE_ID_DESC
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  WALLET_ID_ASC
+  WALLET_ID_DESC
+}
+
 """All input for the `changePassword` mutation."""
 input ChangePasswordInput {
   """
@@ -49,6 +141,578 @@ type ConfirmAccountDeletionPayload {
   success: Boolean
 }
 
+"""All input for the create `AccountBalance` mutation."""
+input CreateAccountBalanceInput {
+  """The `AccountBalance` to be created by this mutation."""
+  accountBalance: AccountBalanceInput!
+
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+}
+
+"""The output of our create `AccountBalance` mutation."""
+type CreateAccountBalancePayload {
+  """The `AccountBalance` that was created by this mutation."""
+  accountBalance: AccountBalance
+
+  """An edge for our `AccountBalance`. May be used by Relay 1."""
+  accountBalanceEdge(
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesEdge
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditVintage` that is related to this `AccountBalance`.
+  """
+  creditVintage: CreditVintage
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `AccountBalance`."""
+  wallet: Wallet
+}
+
+"""All input for the create `CreditClass` mutation."""
+input CreateCreditClassInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CreditClass` to be created by this mutation."""
+  creditClass: CreditClassInput!
+}
+
+"""All input for the create `CreditClassIssuer` mutation."""
+input CreateCreditClassIssuerInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CreditClassIssuer` to be created by this mutation."""
+  creditClassIssuer: CreditClassIssuerInput!
+}
+
+"""The output of our create `CreditClassIssuer` mutation."""
+type CreateCreditClassIssuerPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassIssuer`.
+  """
+  creditClass: CreditClass
+
+  """The `CreditClassIssuer` that was created by this mutation."""
+  creditClassIssuer: CreditClassIssuer
+
+  """An edge for our `CreditClassIssuer`. May be used by Relay 1."""
+  creditClassIssuerEdge(
+    """The method to use when ordering `CreditClassIssuer`."""
+    orderBy: [CreditClassIssuersOrderBy!] = [NATURAL]
+  ): CreditClassIssuersEdge
+
+  """Reads a single `Wallet` that is related to this `CreditClassIssuer`."""
+  issuer: Wallet
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""The output of our create `CreditClass` mutation."""
+type CreateCreditClassPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CreditClass` that was created by this mutation."""
+  creditClass: CreditClass
+
+  """An edge for our `CreditClass`. May be used by Relay 1."""
+  creditClassEdge(
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesEdge
+
+  """Reads a single `Party` that is related to this `CreditClass`."""
+  designer: Party
+
+  """Reads a single `Methodology` that is related to this `CreditClass`."""
+  methodology: Methodology
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `CreditClassVersion` mutation."""
+input CreateCreditClassVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CreditClassVersion` to be created by this mutation."""
+  creditClassVersion: CreditClassVersionInput!
+}
+
+"""The output of our create `CreditClassVersion` mutation."""
+type CreateCreditClassVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassVersion`.
+  """
+  creditClassById: CreditClass
+
+  """The `CreditClassVersion` that was created by this mutation."""
+  creditClassVersion: CreditClassVersion
+
+  """An edge for our `CreditClassVersion`. May be used by Relay 1."""
+  creditClassVersionEdge(
+    """The method to use when ordering `CreditClassVersion`."""
+    orderBy: [CreditClassVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassVersionsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `CreditVintage` mutation."""
+input CreateCreditVintageInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CreditVintage` to be created by this mutation."""
+  creditVintage: CreditVintageInput!
+}
+
+"""The output of our create `CreditVintage` mutation."""
+type CreateCreditVintagePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `CreditVintage`."""
+  creditClass: CreditClass
+
+  """The `CreditVintage` that was created by this mutation."""
+  creditVintage: CreditVintage
+
+  """An edge for our `CreditVintage`. May be used by Relay 1."""
+  creditVintageEdge(
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesEdge
+
+  """Reads a single `Wallet` that is related to this `CreditVintage`."""
+  issuer: Wallet
+
+  """Reads a single `Project` that is related to this `CreditVintage`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `Event` mutation."""
+input CreateEventInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Event` to be created by this mutation."""
+  event: EventInput!
+}
+
+"""The output of our create `Event` mutation."""
+type CreateEventPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Event` that was created by this mutation."""
+  event: Event
+
+  """An edge for our `Event`. May be used by Relay 1."""
+  eventEdge(
+    """The method to use when ordering `Event`."""
+    orderBy: [EventsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): EventsEdge
+
+  """Reads a single `Project` that is related to this `Event`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `Methodology` mutation."""
+input CreateMethodologyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Methodology` to be created by this mutation."""
+  methodology: MethodologyInput!
+}
+
+"""The output of our create `Methodology` mutation."""
+type CreateMethodologyPayload {
+  """Reads a single `Party` that is related to this `Methodology`."""
+  author: Party
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Methodology` that was created by this mutation."""
+  methodology: Methodology
+
+  """An edge for our `Methodology`. May be used by Relay 1."""
+  methodologyEdge(
+    """The method to use when ordering `Methodology`."""
+    orderBy: [MethodologiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `MethodologyVersion` mutation."""
+input CreateMethodologyVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `MethodologyVersion` to be created by this mutation."""
+  methodologyVersion: MethodologyVersionInput!
+}
+
+"""The output of our create `MethodologyVersion` mutation."""
+type CreateMethodologyVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `Methodology` that is related to this `MethodologyVersion`.
+  """
+  methodologyById: Methodology
+
+  """The `MethodologyVersion` that was created by this mutation."""
+  methodologyVersion: MethodologyVersion
+
+  """An edge for our `MethodologyVersion`. May be used by Relay 1."""
+  methodologyVersionEdge(
+    """The method to use when ordering `MethodologyVersion`."""
+    orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologyVersionsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `Mrv` mutation."""
+input CreateMrvInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Mrv` to be created by this mutation."""
+  mrv: MrvInput!
+}
+
+"""The output of our create `Mrv` mutation."""
+type CreateMrvPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Mrv` that was created by this mutation."""
+  mrv: Mrv
+
+  """An edge for our `Mrv`. May be used by Relay 1."""
+  mrvEdge(
+    """The method to use when ordering `Mrv`."""
+    orderBy: [MrvsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MrvsEdge
+
+  """Reads a single `Project` that is related to this `Mrv`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `Organization` mutation."""
+input CreateOrganizationInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Organization` to be created by this mutation."""
+  organization: OrganizationInput!
+}
+
+"""All input for the create `OrganizationMember` mutation."""
+input CreateOrganizationMemberInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `OrganizationMember` to be created by this mutation."""
+  organizationMember: OrganizationMemberInput!
+}
+
+"""The output of our create `OrganizationMember` mutation."""
+type CreateOrganizationMemberPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `User` that is related to this `OrganizationMember`."""
+  member: User
+
+  """
+  Reads a single `Organization` that is related to this `OrganizationMember`.
+  """
+  organization: Organization
+
+  """The `OrganizationMember` that was created by this mutation."""
+  organizationMember: OrganizationMember
+
+  """An edge for our `OrganizationMember`. May be used by Relay 1."""
+  organizationMemberEdge(
+    """The method to use when ordering `OrganizationMember`."""
+    orderBy: [OrganizationMembersOrderBy!] = [NATURAL]
+  ): OrganizationMembersEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""The output of our create `Organization` mutation."""
+type CreateOrganizationPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Organization` that was created by this mutation."""
+  organization: Organization
+
+  """An edge for our `Organization`. May be used by Relay 1."""
+  organizationEdge(
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsEdge
+
+  """Reads a single `User` that is related to this `Organization`."""
+  owner: User
+
+  """Reads a single `Party` that is related to this `Organization`."""
+  party: Party
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `Organization`."""
+  wallet: Wallet
+}
+
+"""All input for the create `Party` mutation."""
+input CreatePartyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Party` to be created by this mutation."""
+  party: PartyInput!
+}
+
+"""The output of our create `Party` mutation."""
+type CreatePartyPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Party` that was created by this mutation."""
+  party: Party
+
+  """An edge for our `Party`. May be used by Relay 1."""
+  partyEdge(
+    """The method to use when ordering `Party`."""
+    orderBy: [PartiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PartiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the create `Project` mutation."""
+input CreateProjectInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Project` to be created by this mutation."""
+  project: ProjectInput!
+}
+
+"""The output of our create `Project` mutation."""
+type CreateProjectPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `Project`."""
+  creditClass: CreditClass
+
+  """Reads a single `Party` that is related to this `Project`."""
+  developer: Party
+
+  """Reads a single `Party` that is related to this `Project`."""
+  landOwner: Party
+
+  """The `Project` that was created by this mutation."""
+  project: Project
+
+  """An edge for our `Project`. May be used by Relay 1."""
+  projectEdge(
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Registry` that is related to this `Project`."""
+  registry: Registry
+
+  """Reads a single `Party` that is related to this `Project`."""
+  steward: Party
+}
+
+"""All input for the create `Registry` mutation."""
+input CreateRegistryInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Registry` to be created by this mutation."""
+  registry: RegistryInput!
+}
+
+"""The output of our create `Registry` mutation."""
+type CreateRegistryPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Registry` that was created by this mutation."""
+  registry: Registry
+
+  """An edge for our `Registry`. May be used by Relay 1."""
+  registryEdge(
+    """The method to use when ordering `Registry`."""
+    orderBy: [RegistriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RegistriesEdge
+}
+
 """All input for the create `UserEmail` mutation."""
 input CreateUserEmailInput {
   """
@@ -87,6 +751,522 @@ type CreateUserEmailPayload {
   ): UserEmailsEdge
 }
 
+"""All input for the create `Wallet` mutation."""
+input CreateWalletInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Wallet` to be created by this mutation."""
+  wallet: WalletInput!
+}
+
+"""The output of our create `Wallet` mutation."""
+type CreateWalletPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Wallet` that was created by this mutation."""
+  wallet: Wallet
+
+  """An edge for our `Wallet`. May be used by Relay 1."""
+  walletEdge(
+    """The method to use when ordering `Wallet`."""
+    orderBy: [WalletsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): WalletsEdge
+}
+
+type CreditClass {
+  createdAt: Datetime!
+
+  """Reads and enables pagination through a set of `CreditClassIssuer`."""
+  creditClassIssuers(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassIssuerCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClassIssuer`."""
+    orderBy: [CreditClassIssuersOrderBy!] = [NATURAL]
+  ): CreditClassIssuersConnection!
+
+  """Reads and enables pagination through a set of `CreditClassVersion`."""
+  creditClassVersionsById(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassVersionCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClassVersion`."""
+    orderBy: [CreditClassVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassVersionsConnection!
+
+  """Reads and enables pagination through a set of `CreditVintage`."""
+  creditVintages(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditVintageCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesConnection!
+
+  """Reads a single `Party` that is related to this `CreditClass`."""
+  designer: Party
+  designerId: UUID
+  id: UUID!
+
+  """Reads a single `Methodology` that is related to this `CreditClass`."""
+  methodology: Methodology
+  methodologyId: UUID!
+
+  """Reads and enables pagination through a set of `Project`."""
+  projects(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `CreditClass` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input CreditClassCondition {
+  """Checks for equality with the object’s `designerId` field."""
+  designerId: UUID
+
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `methodologyId` field."""
+  methodologyId: UUID
+}
+
+"""A connection to a list of `CreditClass` values."""
+type CreditClassesConnection {
+  """
+  A list of edges which contains the `CreditClass` and cursor to aid in pagination.
+  """
+  edges: [CreditClassesEdge!]!
+
+  """A list of `CreditClass` objects."""
+  nodes: [CreditClass!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `CreditClass` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `CreditClass` edge in the connection."""
+type CreditClassesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CreditClass` at the end of the edge."""
+  node: CreditClass!
+}
+
+"""Methods to use when ordering `CreditClass`."""
+enum CreditClassesOrderBy {
+  DESIGNER_ID_ASC
+  DESIGNER_ID_DESC
+  ID_ASC
+  ID_DESC
+  METHODOLOGY_ID_ASC
+  METHODOLOGY_ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""An input for mutations affecting `CreditClass`"""
+input CreditClassInput {
+  designerId: UUID
+  methodologyId: UUID!
+  updatedAt: Datetime
+}
+
+type CreditClassIssuer {
+  createdAt: Datetime!
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassIssuer`.
+  """
+  creditClass: CreditClass
+  creditClassId: UUID!
+
+  """Reads a single `Wallet` that is related to this `CreditClassIssuer`."""
+  issuer: Wallet
+  issuerId: UUID!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `CreditClassIssuer` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input CreditClassIssuerCondition {
+  """Checks for equality with the object’s `creditClassId` field."""
+  creditClassId: UUID
+
+  """Checks for equality with the object’s `issuerId` field."""
+  issuerId: UUID
+}
+
+"""An input for mutations affecting `CreditClassIssuer`"""
+input CreditClassIssuerInput {
+  creditClassId: UUID!
+  issuerId: UUID!
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `CreditClassIssuer` values."""
+type CreditClassIssuersConnection {
+  """
+  A list of edges which contains the `CreditClassIssuer` and cursor to aid in pagination.
+  """
+  edges: [CreditClassIssuersEdge!]!
+
+  """A list of `CreditClassIssuer` objects."""
+  nodes: [CreditClassIssuer!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `CreditClassIssuer` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `CreditClassIssuer` edge in the connection."""
+type CreditClassIssuersEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CreditClassIssuer` at the end of the edge."""
+  node: CreditClassIssuer!
+}
+
+"""Methods to use when ordering `CreditClassIssuer`."""
+enum CreditClassIssuersOrderBy {
+  CREDIT_CLASS_ID_ASC
+  CREDIT_CLASS_ID_DESC
+  ISSUER_ID_ASC
+  ISSUER_ID_DESC
+  NATURAL
+}
+
+"""
+Represents an update to a `CreditClass`. Fields that are set will be updated.
+"""
+input CreditClassPatch {
+  designerId: UUID
+  methodologyId: UUID
+  updatedAt: Datetime
+}
+
+type CreditClassVersion {
+  createdAt: Datetime!
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassVersion`.
+  """
+  creditClassById: CreditClass
+  dateDeveloped: Datetime!
+  description: String
+  id: UUID!
+  metadata: JSON
+  name: String!
+  stateMachine: JSON!
+  version: String!
+}
+
+"""
+A condition to be used against `CreditClassVersion` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input CreditClassVersionCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `CreditClassVersion`"""
+input CreditClassVersionInput {
+  dateDeveloped: Datetime!
+  description: String
+  metadata: JSON
+  name: String!
+  stateMachine: JSON!
+  version: String!
+}
+
+"""
+Represents an update to a `CreditClassVersion`. Fields that are set will be updated.
+"""
+input CreditClassVersionPatch {
+  dateDeveloped: Datetime
+  description: String
+  metadata: JSON
+  name: String
+  stateMachine: JSON
+  version: String
+}
+
+"""A connection to a list of `CreditClassVersion` values."""
+type CreditClassVersionsConnection {
+  """
+  A list of edges which contains the `CreditClassVersion` and cursor to aid in pagination.
+  """
+  edges: [CreditClassVersionsEdge!]!
+
+  """A list of `CreditClassVersion` objects."""
+  nodes: [CreditClassVersion!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `CreditClassVersion` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `CreditClassVersion` edge in the connection."""
+type CreditClassVersionsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CreditClassVersion` at the end of the edge."""
+  node: CreditClassVersion!
+}
+
+"""Methods to use when ordering `CreditClassVersion`."""
+enum CreditClassVersionsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type CreditVintage {
+  """Reads and enables pagination through a set of `AccountBalance`."""
+  accountBalances(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: AccountBalanceCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesConnection!
+  createdAt: Datetime!
+
+  """Reads a single `CreditClass` that is related to this `CreditVintage`."""
+  creditClass: CreditClass
+  creditClassId: UUID
+  id: UUID!
+  initialDistribution: JSON
+
+  """Reads a single `Wallet` that is related to this `CreditVintage`."""
+  issuer: Wallet
+  issuerId: UUID
+
+  """Reads a single `Project` that is related to this `CreditVintage`."""
+  project: Project
+  projectId: UUID
+  units: Int
+}
+
+"""
+A condition to be used against `CreditVintage` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input CreditVintageCondition {
+  """Checks for equality with the object’s `creditClassId` field."""
+  creditClassId: UUID
+
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `issuerId` field."""
+  issuerId: UUID
+
+  """Checks for equality with the object’s `projectId` field."""
+  projectId: UUID
+}
+
+"""An input for mutations affecting `CreditVintage`"""
+input CreditVintageInput {
+  creditClassId: UUID
+  initialDistribution: JSON
+  issuerId: UUID
+  projectId: UUID
+  units: Int
+}
+
+"""
+Represents an update to a `CreditVintage`. Fields that are set will be updated.
+"""
+input CreditVintagePatch {
+  creditClassId: UUID
+  initialDistribution: JSON
+  issuerId: UUID
+  projectId: UUID
+  units: Int
+}
+
+"""A connection to a list of `CreditVintage` values."""
+type CreditVintagesConnection {
+  """
+  A list of edges which contains the `CreditVintage` and cursor to aid in pagination.
+  """
+  edges: [CreditVintagesEdge!]!
+
+  """A list of `CreditVintage` objects."""
+  nodes: [CreditVintage!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `CreditVintage` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `CreditVintage` edge in the connection."""
+type CreditVintagesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CreditVintage` at the end of the edge."""
+  node: CreditVintage!
+}
+
+"""Methods to use when ordering `CreditVintage`."""
+enum CreditVintagesOrderBy {
+  CREDIT_CLASS_ID_ASC
+  CREDIT_CLASS_ID_DESC
+  ID_ASC
+  ID_DESC
+  ISSUER_ID_ASC
+  ISSUER_ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  PROJECT_ID_ASC
+  PROJECT_ID_DESC
+}
+
 """A location in a connection that can be used for resuming pagination."""
 scalar Cursor
 
@@ -96,6 +1276,482 @@ A point in time as described by the [ISO
 """
 scalar Datetime
 
+"""All input for the `deleteAccountBalance` mutation."""
+input DeleteAccountBalanceInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `AccountBalance` mutation."""
+type DeleteAccountBalancePayload {
+  """The `AccountBalance` that was deleted by this mutation."""
+  accountBalance: AccountBalance
+
+  """An edge for our `AccountBalance`. May be used by Relay 1."""
+  accountBalanceEdge(
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesEdge
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditVintage` that is related to this `AccountBalance`.
+  """
+  creditVintage: CreditVintage
+  deletedAccountBalanceNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `AccountBalance`."""
+  wallet: Wallet
+}
+
+"""All input for the `deleteCreditClass` mutation."""
+input DeleteCreditClassInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `CreditClass` mutation."""
+type DeleteCreditClassPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CreditClass` that was deleted by this mutation."""
+  creditClass: CreditClass
+
+  """An edge for our `CreditClass`. May be used by Relay 1."""
+  creditClassEdge(
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesEdge
+  deletedCreditClassNodeId: ID
+
+  """Reads a single `Party` that is related to this `CreditClass`."""
+  designer: Party
+
+  """Reads a single `Methodology` that is related to this `CreditClass`."""
+  methodology: Methodology
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteCreditClassVersion` mutation."""
+input DeleteCreditClassVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  createdAt: Datetime!
+  id: UUID!
+}
+
+"""The output of our delete `CreditClassVersion` mutation."""
+type DeleteCreditClassVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassVersion`.
+  """
+  creditClassById: CreditClass
+
+  """The `CreditClassVersion` that was deleted by this mutation."""
+  creditClassVersion: CreditClassVersion
+
+  """An edge for our `CreditClassVersion`. May be used by Relay 1."""
+  creditClassVersionEdge(
+    """The method to use when ordering `CreditClassVersion`."""
+    orderBy: [CreditClassVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassVersionsEdge
+  deletedCreditClassVersionNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteCreditVintage` mutation."""
+input DeleteCreditVintageInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `CreditVintage` mutation."""
+type DeleteCreditVintagePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `CreditVintage`."""
+  creditClass: CreditClass
+
+  """The `CreditVintage` that was deleted by this mutation."""
+  creditVintage: CreditVintage
+
+  """An edge for our `CreditVintage`. May be used by Relay 1."""
+  creditVintageEdge(
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesEdge
+  deletedCreditVintageNodeId: ID
+
+  """Reads a single `Wallet` that is related to this `CreditVintage`."""
+  issuer: Wallet
+
+  """Reads a single `Project` that is related to this `CreditVintage`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteEvent` mutation."""
+input DeleteEventInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Event` mutation."""
+type DeleteEventPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedEventNodeId: ID
+
+  """The `Event` that was deleted by this mutation."""
+  event: Event
+
+  """An edge for our `Event`. May be used by Relay 1."""
+  eventEdge(
+    """The method to use when ordering `Event`."""
+    orderBy: [EventsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): EventsEdge
+
+  """Reads a single `Project` that is related to this `Event`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteMethodology` mutation."""
+input DeleteMethodologyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Methodology` mutation."""
+type DeleteMethodologyPayload {
+  """Reads a single `Party` that is related to this `Methodology`."""
+  author: Party
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedMethodologyNodeId: ID
+
+  """The `Methodology` that was deleted by this mutation."""
+  methodology: Methodology
+
+  """An edge for our `Methodology`. May be used by Relay 1."""
+  methodologyEdge(
+    """The method to use when ordering `Methodology`."""
+    orderBy: [MethodologiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteMethodologyVersion` mutation."""
+input DeleteMethodologyVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  createdAt: Datetime!
+  id: UUID!
+}
+
+"""The output of our delete `MethodologyVersion` mutation."""
+type DeleteMethodologyVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedMethodologyVersionNodeId: ID
+
+  """
+  Reads a single `Methodology` that is related to this `MethodologyVersion`.
+  """
+  methodologyById: Methodology
+
+  """The `MethodologyVersion` that was deleted by this mutation."""
+  methodologyVersion: MethodologyVersion
+
+  """An edge for our `MethodologyVersion`. May be used by Relay 1."""
+  methodologyVersionEdge(
+    """The method to use when ordering `MethodologyVersion`."""
+    orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologyVersionsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteMrv` mutation."""
+input DeleteMrvInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Mrv` mutation."""
+type DeleteMrvPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedMrvNodeId: ID
+
+  """The `Mrv` that was deleted by this mutation."""
+  mrv: Mrv
+
+  """An edge for our `Mrv`. May be used by Relay 1."""
+  mrvEdge(
+    """The method to use when ordering `Mrv`."""
+    orderBy: [MrvsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MrvsEdge
+
+  """Reads a single `Project` that is related to this `Mrv`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteOrganization` mutation."""
+input DeleteOrganizationInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Organization` mutation."""
+type DeleteOrganizationPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedOrganizationNodeId: ID
+
+  """The `Organization` that was deleted by this mutation."""
+  organization: Organization
+
+  """An edge for our `Organization`. May be used by Relay 1."""
+  organizationEdge(
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsEdge
+
+  """Reads a single `User` that is related to this `Organization`."""
+  owner: User
+
+  """Reads a single `Party` that is related to this `Organization`."""
+  party: Party
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `Organization`."""
+  wallet: Wallet
+}
+
+"""All input for the `deleteParty` mutation."""
+input DeletePartyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Party` mutation."""
+type DeletePartyPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedPartyNodeId: ID
+
+  """The `Party` that was deleted by this mutation."""
+  party: Party
+
+  """An edge for our `Party`. May be used by Relay 1."""
+  partyEdge(
+    """The method to use when ordering `Party`."""
+    orderBy: [PartiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PartiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `deleteProject` mutation."""
+input DeleteProjectInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Project` mutation."""
+type DeleteProjectPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `Project`."""
+  creditClass: CreditClass
+  deletedProjectNodeId: ID
+
+  """Reads a single `Party` that is related to this `Project`."""
+  developer: Party
+
+  """Reads a single `Party` that is related to this `Project`."""
+  landOwner: Party
+
+  """The `Project` that was deleted by this mutation."""
+  project: Project
+
+  """An edge for our `Project`. May be used by Relay 1."""
+  projectEdge(
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Registry` that is related to this `Project`."""
+  registry: Registry
+
+  """Reads a single `Party` that is related to this `Project`."""
+  steward: Party
+}
+
+"""All input for the `deleteRegistry` mutation."""
+input DeleteRegistryInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Registry` mutation."""
+type DeleteRegistryPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedRegistryNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Registry` that was deleted by this mutation."""
+  registry: Registry
+
+  """An edge for our `Registry`. May be used by Relay 1."""
+  registryEdge(
+    """The method to use when ordering `Registry`."""
+    orderBy: [RegistriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RegistriesEdge
+}
+
 """All input for the `deleteUserAuthentication` mutation."""
 input DeleteUserAuthenticationInput {
   """
@@ -103,7 +1759,7 @@ input DeleteUserAuthenticationInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: Int!
+  id: UUID!
 }
 
 """The output of our delete `UserAuthentication` mutation."""
@@ -134,7 +1790,7 @@ input DeleteUserEmailInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: Int!
+  id: UUID!
 }
 
 """The output of our delete `UserEmail` mutation."""
@@ -164,6 +1820,127 @@ type DeleteUserEmailPayload {
   ): UserEmailsEdge
 }
 
+"""All input for the `deleteWallet` mutation."""
+input DeleteWalletInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+}
+
+"""The output of our delete `Wallet` mutation."""
+type DeleteWalletPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  deletedWalletNodeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Wallet` that was deleted by this mutation."""
+  wallet: Wallet
+
+  """An edge for our `Wallet`. May be used by Relay 1."""
+  walletEdge(
+    """The method to use when ordering `Wallet`."""
+    orderBy: [WalletsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): WalletsEdge
+}
+
+type Event {
+  createdAt: Datetime!
+  date: Datetime
+  description: String
+  fromState: ProjectState
+  id: UUID!
+
+  """Reads a single `Project` that is related to this `Event`."""
+  project: Project
+  projectId: UUID!
+  summary: String!
+  toState: ProjectState
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `Event` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input EventCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `projectId` field."""
+  projectId: UUID
+}
+
+"""An input for mutations affecting `Event`"""
+input EventInput {
+  date: Datetime
+  description: String
+  fromState: ProjectState
+  projectId: UUID!
+  summary: String!
+  toState: ProjectState
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Event`. Fields that are set will be updated.
+"""
+input EventPatch {
+  date: Datetime
+  description: String
+  fromState: ProjectState
+  projectId: UUID
+  summary: String
+  toState: ProjectState
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `Event` values."""
+type EventsConnection {
+  """
+  A list of edges which contains the `Event` and cursor to aid in pagination.
+  """
+  edges: [EventsEdge!]!
+
+  """A list of `Event` objects."""
+  nodes: [Event!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Event` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Event` edge in the connection."""
+type EventsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Event` at the end of the edge."""
+  node: Event!
+}
+
+"""Methods to use when ordering `Event`."""
+enum EventsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  PROJECT_ID_ASC
+  PROJECT_ID_DESC
+}
+
 """All input for the `forgotPassword` mutation."""
 input ForgotPasswordInput {
   """
@@ -188,6 +1965,11 @@ type ForgotPasswordPayload {
   query: Query
 }
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
 input LoginInput {
   password: String!
   username: String!
@@ -208,7 +1990,7 @@ input MakeEmailPrimaryInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  emailId: Int!
+  emailId: UUID
 }
 
 """The output of our `makeEmailPrimary` mutation."""
@@ -235,6 +2017,293 @@ type MakeEmailPrimaryPayload {
   ): UserEmailsEdge
 }
 
+"""A connection to a list of `Methodology` values."""
+type MethodologiesConnection {
+  """
+  A list of edges which contains the `Methodology` and cursor to aid in pagination.
+  """
+  edges: [MethodologiesEdge!]!
+
+  """A list of `Methodology` objects."""
+  nodes: [Methodology!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Methodology` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Methodology` edge in the connection."""
+type MethodologiesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Methodology` at the end of the edge."""
+  node: Methodology!
+}
+
+"""Methods to use when ordering `Methodology`."""
+enum MethodologiesOrderBy {
+  AUTHOR_ID_ASC
+  AUTHOR_ID_DESC
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type Methodology {
+  """Reads a single `Party` that is related to this `Methodology`."""
+  author: Party
+  authorId: UUID!
+  createdAt: Datetime!
+
+  """Reads and enables pagination through a set of `CreditClass`."""
+  creditClasses(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesConnection!
+  id: UUID!
+
+  """Reads and enables pagination through a set of `MethodologyVersion`."""
+  methodologyVersionsById(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MethodologyVersionCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `MethodologyVersion`."""
+    orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologyVersionsConnection!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `Methodology` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input MethodologyCondition {
+  """Checks for equality with the object’s `authorId` field."""
+  authorId: UUID
+
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `Methodology`"""
+input MethodologyInput {
+  authorId: UUID!
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Methodology`. Fields that are set will be updated.
+"""
+input MethodologyPatch {
+  authorId: UUID
+  updatedAt: Datetime
+}
+
+type MethodologyVersion {
+  boundary: String!
+  createdAt: Datetime!
+  dateDeveloped: Datetime!
+  description: String
+  files: JSON
+  id: UUID!
+  metadata: JSON
+
+  """
+  Reads a single `Methodology` that is related to this `MethodologyVersion`.
+  """
+  methodologyById: Methodology
+  name: String!
+  version: String!
+}
+
+"""
+A condition to be used against `MethodologyVersion` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input MethodologyVersionCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `MethodologyVersion`"""
+input MethodologyVersionInput {
+  boundary: String!
+  dateDeveloped: Datetime!
+  description: String
+  files: JSON
+  metadata: JSON
+  name: String!
+  version: String!
+}
+
+"""
+Represents an update to a `MethodologyVersion`. Fields that are set will be updated.
+"""
+input MethodologyVersionPatch {
+  boundary: String
+  dateDeveloped: Datetime
+  description: String
+  files: JSON
+  metadata: JSON
+  name: String
+  version: String
+}
+
+"""A connection to a list of `MethodologyVersion` values."""
+type MethodologyVersionsConnection {
+  """
+  A list of edges which contains the `MethodologyVersion` and cursor to aid in pagination.
+  """
+  edges: [MethodologyVersionsEdge!]!
+
+  """A list of `MethodologyVersion` objects."""
+  nodes: [MethodologyVersion!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `MethodologyVersion` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `MethodologyVersion` edge in the connection."""
+type MethodologyVersionsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `MethodologyVersion` at the end of the edge."""
+  node: MethodologyVersion!
+}
+
+"""Methods to use when ordering `MethodologyVersion`."""
+enum MethodologyVersionsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type Mrv {
+  createdAt: Datetime!
+  id: UUID!
+
+  """Reads a single `Project` that is related to this `Mrv`."""
+  project: Project
+  projectId: UUID
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `Mrv` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input MrvCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `projectId` field."""
+  projectId: UUID
+}
+
+"""An input for mutations affecting `Mrv`"""
+input MrvInput {
+  projectId: UUID
+  updatedAt: Datetime
+}
+
+"""Represents an update to a `Mrv`. Fields that are set will be updated."""
+input MrvPatch {
+  projectId: UUID
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `Mrv` values."""
+type MrvsConnection {
+  """
+  A list of edges which contains the `Mrv` and cursor to aid in pagination.
+  """
+  edges: [MrvsEdge!]!
+
+  """A list of `Mrv` objects."""
+  nodes: [Mrv!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Mrv` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Mrv` edge in the connection."""
+type MrvsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Mrv` at the end of the edge."""
+  node: Mrv!
+}
+
+"""Methods to use when ordering `Mrv`."""
+enum MrvsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  PROJECT_ID_ASC
+  PROJECT_ID_DESC
+}
+
 """
 The root mutation type which contains root level fields which mutate data.
 """
@@ -259,6 +2328,118 @@ type Mutation {
     input: ConfirmAccountDeletionInput!
   ): ConfirmAccountDeletionPayload
 
+  """Creates a single `AccountBalance`."""
+  createAccountBalance(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateAccountBalanceInput!
+  ): CreateAccountBalancePayload
+
+  """Creates a single `CreditClass`."""
+  createCreditClass(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCreditClassInput!
+  ): CreateCreditClassPayload
+
+  """Creates a single `CreditClassIssuer`."""
+  createCreditClassIssuer(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCreditClassIssuerInput!
+  ): CreateCreditClassIssuerPayload
+
+  """Creates a single `CreditClassVersion`."""
+  createCreditClassVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCreditClassVersionInput!
+  ): CreateCreditClassVersionPayload
+
+  """Creates a single `CreditVintage`."""
+  createCreditVintage(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCreditVintageInput!
+  ): CreateCreditVintagePayload
+
+  """Creates a single `Event`."""
+  createEvent(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateEventInput!
+  ): CreateEventPayload
+
+  """Creates a single `Methodology`."""
+  createMethodology(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMethodologyInput!
+  ): CreateMethodologyPayload
+
+  """Creates a single `MethodologyVersion`."""
+  createMethodologyVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMethodologyVersionInput!
+  ): CreateMethodologyVersionPayload
+
+  """Creates a single `Mrv`."""
+  createMrv(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMrvInput!
+  ): CreateMrvPayload
+
+  """Creates a single `Organization`."""
+  createOrganization(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateOrganizationInput!
+  ): CreateOrganizationPayload
+
+  """Creates a single `OrganizationMember`."""
+  createOrganizationMember(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateOrganizationMemberInput!
+  ): CreateOrganizationMemberPayload
+
+  """Creates a single `Party`."""
+  createParty(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreatePartyInput!
+  ): CreatePartyPayload
+
+  """Creates a single `Project`."""
+  createProject(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateProjectInput!
+  ): CreateProjectPayload
+
+  """Creates a single `Registry`."""
+  createRegistry(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateRegistryInput!
+  ): CreateRegistryPayload
+
   """Creates a single `UserEmail`."""
   createUserEmail(
     """
@@ -266,6 +2447,110 @@ type Mutation {
     """
     input: CreateUserEmailInput!
   ): CreateUserEmailPayload
+
+  """Creates a single `Wallet`."""
+  createWallet(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateWalletInput!
+  ): CreateWalletPayload
+
+  """Deletes a single `AccountBalance` using a unique key."""
+  deleteAccountBalance(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteAccountBalanceInput!
+  ): DeleteAccountBalancePayload
+
+  """Deletes a single `CreditClass` using a unique key."""
+  deleteCreditClass(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCreditClassInput!
+  ): DeleteCreditClassPayload
+
+  """Deletes a single `CreditClassVersion` using a unique key."""
+  deleteCreditClassVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCreditClassVersionInput!
+  ): DeleteCreditClassVersionPayload
+
+  """Deletes a single `CreditVintage` using a unique key."""
+  deleteCreditVintage(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCreditVintageInput!
+  ): DeleteCreditVintagePayload
+
+  """Deletes a single `Event` using a unique key."""
+  deleteEvent(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteEventInput!
+  ): DeleteEventPayload
+
+  """Deletes a single `Methodology` using a unique key."""
+  deleteMethodology(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMethodologyInput!
+  ): DeleteMethodologyPayload
+
+  """Deletes a single `MethodologyVersion` using a unique key."""
+  deleteMethodologyVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMethodologyVersionInput!
+  ): DeleteMethodologyVersionPayload
+
+  """Deletes a single `Mrv` using a unique key."""
+  deleteMrv(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMrvInput!
+  ): DeleteMrvPayload
+
+  """Deletes a single `Organization` using a unique key."""
+  deleteOrganization(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteOrganizationInput!
+  ): DeleteOrganizationPayload
+
+  """Deletes a single `Party` using a unique key."""
+  deleteParty(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeletePartyInput!
+  ): DeletePartyPayload
+
+  """Deletes a single `Project` using a unique key."""
+  deleteProject(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteProjectInput!
+  ): DeleteProjectPayload
+
+  """Deletes a single `Registry` using a unique key."""
+  deleteRegistry(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteRegistryInput!
+  ): DeleteRegistryPayload
 
   """Deletes a single `UserAuthentication` using a unique key."""
   deleteUserAuthentication(
@@ -282,6 +2567,14 @@ type Mutation {
     """
     input: DeleteUserEmailInput!
   ): DeleteUserEmailPayload
+
+  """Deletes a single `Wallet` using a unique key."""
+  deleteWallet(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteWalletInput!
+  ): DeleteWalletPayload
 
   """
   If you've forgotten your password, give us one of your email addresses and
@@ -361,6 +2654,102 @@ type Mutation {
     input: ResetPasswordInput!
   ): ResetPasswordPayload
 
+  """Updates a single `AccountBalance` using a unique key and a patch."""
+  updateAccountBalance(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateAccountBalanceInput!
+  ): UpdateAccountBalancePayload
+
+  """Updates a single `CreditClass` using a unique key and a patch."""
+  updateCreditClass(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCreditClassInput!
+  ): UpdateCreditClassPayload
+
+  """Updates a single `CreditClassVersion` using a unique key and a patch."""
+  updateCreditClassVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCreditClassVersionInput!
+  ): UpdateCreditClassVersionPayload
+
+  """Updates a single `CreditVintage` using a unique key and a patch."""
+  updateCreditVintage(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCreditVintageInput!
+  ): UpdateCreditVintagePayload
+
+  """Updates a single `Event` using a unique key and a patch."""
+  updateEvent(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateEventInput!
+  ): UpdateEventPayload
+
+  """Updates a single `Methodology` using a unique key and a patch."""
+  updateMethodology(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMethodologyInput!
+  ): UpdateMethodologyPayload
+
+  """Updates a single `MethodologyVersion` using a unique key and a patch."""
+  updateMethodologyVersion(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMethodologyVersionInput!
+  ): UpdateMethodologyVersionPayload
+
+  """Updates a single `Mrv` using a unique key and a patch."""
+  updateMrv(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMrvInput!
+  ): UpdateMrvPayload
+
+  """Updates a single `Organization` using a unique key and a patch."""
+  updateOrganization(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateOrganizationInput!
+  ): UpdateOrganizationPayload
+
+  """Updates a single `Party` using a unique key and a patch."""
+  updateParty(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdatePartyInput!
+  ): UpdatePartyPayload
+
+  """Updates a single `Project` using a unique key and a patch."""
+  updateProject(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateProjectInput!
+  ): UpdateProjectPayload
+
+  """Updates a single `Registry` using a unique key and a patch."""
+  updateRegistry(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateRegistryInput!
+  ): UpdateRegistryPayload
+
   """Updates a single `User` using a unique key and a patch."""
   updateUser(
     """
@@ -368,6 +2757,14 @@ type Mutation {
     """
     input: UpdateUserInput!
   ): UpdateUserPayload
+
+  """Updates a single `Wallet` using a unique key and a patch."""
+  updateWallet(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateWalletInput!
+  ): UpdateWalletPayload
 
   """
   Once you have received a verification token for your email, you may call this
@@ -379,6 +2776,211 @@ type Mutation {
     """
     input: VerifyEmailInput!
   ): VerifyEmailPayload
+}
+
+type Organization {
+  createdAt: Datetime!
+  id: UUID!
+  logo: String
+  name: String!
+
+  """Reads and enables pagination through a set of `OrganizationMember`."""
+  organizationMembers(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationMemberCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `OrganizationMember`."""
+    orderBy: [OrganizationMembersOrderBy!] = [NATURAL]
+  ): OrganizationMembersConnection!
+
+  """Reads a single `User` that is related to this `Organization`."""
+  owner: User
+  ownerId: UUID!
+
+  """Reads a single `Party` that is related to this `Organization`."""
+  party: Party
+  partyId: UUID
+  type: PartyType!
+  updatedAt: Datetime
+
+  """Reads a single `Wallet` that is related to this `Organization`."""
+  wallet: Wallet
+  walletId: UUID
+  website: String
+}
+
+"""
+A condition to be used against `Organization` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input OrganizationCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `ownerId` field."""
+  ownerId: UUID
+
+  """Checks for equality with the object’s `partyId` field."""
+  partyId: UUID
+
+  """Checks for equality with the object’s `walletId` field."""
+  walletId: UUID
+}
+
+"""An input for mutations affecting `Organization`"""
+input OrganizationInput {
+  logo: String
+  name: String!
+  ownerId: UUID!
+  type: PartyType
+  updatedAt: Datetime
+  walletId: UUID
+  website: String
+}
+
+type OrganizationMember {
+  createdAt: Datetime!
+
+  """Reads a single `User` that is related to this `OrganizationMember`."""
+  member: User
+  memberId: UUID!
+
+  """
+  Reads a single `Organization` that is related to this `OrganizationMember`.
+  """
+  organization: Organization
+  organizationId: UUID!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `OrganizationMember` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input OrganizationMemberCondition {
+  """Checks for equality with the object’s `memberId` field."""
+  memberId: UUID
+
+  """Checks for equality with the object’s `organizationId` field."""
+  organizationId: UUID
+}
+
+"""An input for mutations affecting `OrganizationMember`"""
+input OrganizationMemberInput {
+  memberId: UUID!
+  organizationId: UUID!
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `OrganizationMember` values."""
+type OrganizationMembersConnection {
+  """
+  A list of edges which contains the `OrganizationMember` and cursor to aid in pagination.
+  """
+  edges: [OrganizationMembersEdge!]!
+
+  """A list of `OrganizationMember` objects."""
+  nodes: [OrganizationMember!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `OrganizationMember` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `OrganizationMember` edge in the connection."""
+type OrganizationMembersEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `OrganizationMember` at the end of the edge."""
+  node: OrganizationMember!
+}
+
+"""Methods to use when ordering `OrganizationMember`."""
+enum OrganizationMembersOrderBy {
+  MEMBER_ID_ASC
+  MEMBER_ID_DESC
+  NATURAL
+  ORGANIZATION_ID_ASC
+  ORGANIZATION_ID_DESC
+}
+
+"""
+Represents an update to a `Organization`. Fields that are set will be updated.
+"""
+input OrganizationPatch {
+  logo: String
+  name: String
+  ownerId: UUID
+  type: PartyType
+  updatedAt: Datetime
+  walletId: UUID
+  website: String
+}
+
+"""A connection to a list of `Organization` values."""
+type OrganizationsConnection {
+  """
+  A list of edges which contains the `Organization` and cursor to aid in pagination.
+  """
+  edges: [OrganizationsEdge!]!
+
+  """A list of `Organization` objects."""
+  nodes: [Organization!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Organization` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Organization` edge in the connection."""
+type OrganizationsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Organization` at the end of the edge."""
+  node: Organization!
+}
+
+"""Methods to use when ordering `Organization`."""
+enum OrganizationsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  OWNER_ID_ASC
+  OWNER_ID_DESC
+  PARTY_ID_ASC
+  PARTY_ID_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  WALLET_ID_ASC
+  WALLET_ID_DESC
 }
 
 """Information about pagination in a connection."""
@@ -396,32 +2998,1112 @@ type PageInfo {
   startCursor: Cursor
 }
 
+"""A connection to a list of `Party` values."""
+type PartiesConnection {
+  """
+  A list of edges which contains the `Party` and cursor to aid in pagination.
+  """
+  edges: [PartiesEdge!]!
+
+  """A list of `Party` objects."""
+  nodes: [Party!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Party` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Party` edge in the connection."""
+type PartiesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Party` at the end of the edge."""
+  node: Party!
+}
+
+"""Methods to use when ordering `Party`."""
+enum PartiesOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type Party {
+  address: String
+
+  """Reads and enables pagination through a set of `Methodology`."""
+  authoredMethodologies(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MethodologyCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Methodology`."""
+    orderBy: [MethodologiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologiesConnection!
+  createdAt: Datetime!
+
+  """Reads and enables pagination through a set of `CreditClass`."""
+  creditClassesByDesignerId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesConnection!
+  id: UUID!
+
+  """Reads and enables pagination through a set of `Organization`."""
+  organizations(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsConnection!
+
+  """Reads and enables pagination through a set of `Project`."""
+  projectsByDeveloperId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection!
+
+  """Reads and enables pagination through a set of `Project`."""
+  projectsByLandOwnerId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection!
+
+  """Reads and enables pagination through a set of `Project`."""
+  projectsByStewardId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection!
+  shortDescription: String
+  type: PartyType!
+  updatedAt: Datetime
+
+  """Reads and enables pagination through a set of `User`."""
+  users(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: UserCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersConnection!
+}
+
+"""
+A condition to be used against `Party` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input PartyCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `Party`"""
+input PartyInput {
+  address: String
+  shortDescription: String
+  type: PartyType!
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Party`. Fields that are set will be updated.
+"""
+input PartyPatch {
+  address: String
+  shortDescription: String
+  type: PartyType
+  updatedAt: Datetime
+}
+
+enum PartyType {
+  ORGANIZATION
+  USER
+}
+
+type Project {
+  applicationDate: Datetime!
+  area: Int!
+  areaUnit: String!
+  createdAt: Datetime!
+
+  """Reads a single `CreditClass` that is related to this `Project`."""
+  creditClass: CreditClass
+  creditClassId: UUID!
+
+  """Reads and enables pagination through a set of `CreditVintage`."""
+  creditVintages(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditVintageCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesConnection!
+
+  """Reads a single `Party` that is related to this `Project`."""
+  developer: Party
+  developerId: UUID
+  documents: JSON
+  endDate: Datetime!
+
+  """Reads and enables pagination through a set of `Event`."""
+  events(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: EventCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Event`."""
+    orderBy: [EventsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): EventsConnection!
+  id: UUID!
+  impact: JSON
+
+  """Reads a single `Party` that is related to this `Project`."""
+  landOwner: Party
+  landOwnerId: UUID
+  lastEventIndex: Int
+  location: String!
+  longDescription: String!
+  metadata: JSON
+
+  """Reads and enables pagination through a set of `Mrv`."""
+  mrvs(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MrvCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Mrv`."""
+    orderBy: [MrvsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MrvsConnection!
+  name: String!
+  photos: [String]!
+
+  """Reads a single `Registry` that is related to this `Project`."""
+  registry: Registry
+  registryId: UUID
+  startDate: Datetime!
+  state: ProjectState!
+
+  """Reads a single `Party` that is related to this `Project`."""
+  steward: Party
+  stewardId: UUID
+  summaryDescription: String!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `Project` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input ProjectCondition {
+  """Checks for equality with the object’s `creditClassId` field."""
+  creditClassId: UUID
+
+  """Checks for equality with the object’s `developerId` field."""
+  developerId: UUID
+
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `landOwnerId` field."""
+  landOwnerId: UUID
+
+  """Checks for equality with the object’s `registryId` field."""
+  registryId: UUID
+
+  """Checks for equality with the object’s `stewardId` field."""
+  stewardId: UUID
+}
+
+"""An input for mutations affecting `Project`"""
+input ProjectInput {
+  applicationDate: Datetime!
+  area: Int!
+  areaUnit: String!
+  creditClassId: UUID!
+  developerId: UUID
+  documents: JSON
+  endDate: Datetime!
+  impact: JSON
+  landOwnerId: UUID
+  lastEventIndex: Int
+  location: String!
+  longDescription: String!
+  metadata: JSON
+  name: String!
+  photos: [String]!
+  registryId: UUID
+  startDate: Datetime!
+  state: ProjectState!
+  stewardId: UUID
+  summaryDescription: String!
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Project`. Fields that are set will be updated.
+"""
+input ProjectPatch {
+  applicationDate: Datetime
+  area: Int
+  areaUnit: String
+  creditClassId: UUID
+  developerId: UUID
+  documents: JSON
+  endDate: Datetime
+  impact: JSON
+  landOwnerId: UUID
+  lastEventIndex: Int
+  location: String
+  longDescription: String
+  metadata: JSON
+  name: String
+  photos: [String]
+  registryId: UUID
+  startDate: Datetime
+  state: ProjectState
+  stewardId: UUID
+  summaryDescription: String
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `Project` values."""
+type ProjectsConnection {
+  """
+  A list of edges which contains the `Project` and cursor to aid in pagination.
+  """
+  edges: [ProjectsEdge!]!
+
+  """A list of `Project` objects."""
+  nodes: [Project!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Project` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Project` edge in the connection."""
+type ProjectsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Project` at the end of the edge."""
+  node: Project!
+}
+
+"""Methods to use when ordering `Project`."""
+enum ProjectsOrderBy {
+  CREDIT_CLASS_ID_ASC
+  CREDIT_CLASS_ID_DESC
+  DEVELOPER_ID_ASC
+  DEVELOPER_ID_DESC
+  ID_ASC
+  ID_DESC
+  LAND_OWNER_ID_ASC
+  LAND_OWNER_ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  REGISTRY_ID_ASC
+  REGISTRY_ID_DESC
+  STEWARD_ID_ASC
+  STEWARD_ID_DESC
+}
+
+enum ProjectState {
+  ACTIVE
+  ENDED
+  HOLD
+  PENDING_APPROVAL
+  PROPOSED
+}
+
 """The root query type which gives access points into the data universe."""
 type Query {
+  accountBalance(id: UUID!): AccountBalance
+
+  """Reads and enables pagination through a set of `AccountBalance`."""
+  accountBalances(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: AccountBalanceCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesConnection
+  creditClass(id: UUID!): CreditClass
+
+  """Reads and enables pagination through a set of `CreditClass`."""
+  creditClasses(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesConnection
+
+  """Reads and enables pagination through a set of `CreditClassIssuer`."""
+  creditClassIssuers(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassIssuerCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClassIssuer`."""
+    orderBy: [CreditClassIssuersOrderBy!] = [NATURAL]
+  ): CreditClassIssuersConnection
+  creditClassVersion(createdAt: Datetime!, id: UUID!): CreditClassVersion
+
+  """Reads and enables pagination through a set of `CreditClassVersion`."""
+  creditClassVersions(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassVersionCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClassVersion`."""
+    orderBy: [CreditClassVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassVersionsConnection
+  creditVintage(id: UUID!): CreditVintage
+
+  """Reads and enables pagination through a set of `CreditVintage`."""
+  creditVintages(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditVintageCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesConnection
+
   """The currently logged in user (or null if not logged in)."""
   currentUser: User
+  event(id: UUID!): Event
+
+  """Reads and enables pagination through a set of `Event`."""
+  events(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: EventCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Event`."""
+    orderBy: [EventsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): EventsConnection
+
+  """Reads and enables pagination through a set of `Methodology`."""
+  methodologies(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MethodologyCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Methodology`."""
+    orderBy: [MethodologiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologiesConnection
+  methodology(id: UUID!): Methodology
+  methodologyVersion(createdAt: Datetime!, id: UUID!): MethodologyVersion
+
+  """Reads and enables pagination through a set of `MethodologyVersion`."""
+  methodologyVersions(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MethodologyVersionCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `MethodologyVersion`."""
+    orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologyVersionsConnection
+  mrv(id: UUID!): Mrv
+
+  """Reads and enables pagination through a set of `Mrv`."""
+  mrvs(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MrvCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Mrv`."""
+    orderBy: [MrvsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MrvsConnection
+  organization(id: UUID!): Organization
+  organizationByPartyIdAndType(partyId: UUID!, type: PartyType!): Organization
+
+  """Reads and enables pagination through a set of `OrganizationMember`."""
+  organizationMembers(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationMemberCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `OrganizationMember`."""
+    orderBy: [OrganizationMembersOrderBy!] = [NATURAL]
+  ): OrganizationMembersConnection
+
+  """Reads and enables pagination through a set of `Organization`."""
+  organizations(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsConnection
+
+  """Reads and enables pagination through a set of `Party`."""
+  parties(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: PartyCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Party`."""
+    orderBy: [PartiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PartiesConnection
+  party(id: UUID!): Party
+  project(id: UUID!): Project
+
+  """Reads and enables pagination through a set of `Project`."""
+  projects(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection
 
   """
   Exposes the root query type nested one level down. This is helpful for Relay 1
   which can only query top level fields if they are in a particular form.
   """
   query: Query!
-  user(id: Int!): User
-  userAuthentication(id: Int!): UserAuthentication
+
+  """Reads and enables pagination through a set of `Registry`."""
+  registries(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: RegistryCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Registry`."""
+    orderBy: [RegistriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RegistriesConnection
+  registry(id: UUID!): Registry
+  user(id: UUID!): User
+  userAuthentication(id: UUID!): UserAuthentication
+  userByPartyIdAndType(partyId: UUID!, type: PartyType!): User
   userByUsername(username: String!): User
-  userEmail(id: Int!): UserEmail
+  userEmail(id: UUID!): UserEmail
+  wallet(id: UUID!): Wallet
+
+  """Reads and enables pagination through a set of `Wallet`."""
+  wallets(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: WalletCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Wallet`."""
+    orderBy: [WalletsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): WalletsConnection
 }
 
 input RegisterInput {
   avatarUrl: String
   email: String!
-  name: String
+  firstName: String
+  lastName: String
   password: String!
   username: String!
 }
 
 type RegisterPayload {
   user: User!
+}
+
+"""A connection to a list of `Registry` values."""
+type RegistriesConnection {
+  """
+  A list of edges which contains the `Registry` and cursor to aid in pagination.
+  """
+  edges: [RegistriesEdge!]!
+
+  """A list of `Registry` objects."""
+  nodes: [Registry!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Registry` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Registry` edge in the connection."""
+type RegistriesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Registry` at the end of the edge."""
+  node: Registry!
+}
+
+"""Methods to use when ordering `Registry`."""
+enum RegistriesOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type Registry {
+  createdAt: Datetime!
+  id: UUID!
+  name: String!
+
+  """Reads and enables pagination through a set of `Project`."""
+  projects(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: ProjectCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsConnection!
+  updatedAt: Datetime
+}
+
+"""
+A condition to be used against `Registry` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input RegistryCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `Registry`"""
+input RegistryInput {
+  name: String!
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Registry`. Fields that are set will be updated.
+"""
+input RegistryPatch {
+  name: String
+  updatedAt: Datetime
 }
 
 """All input for the `requestAccountDeletion` mutation."""
@@ -455,7 +4137,7 @@ input ResendEmailVerificationCodeInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  emailId: Int!
+  emailId: UUID
 }
 
 """The output of our `resendEmailVerificationCode` mutation."""
@@ -482,7 +4164,7 @@ input ResetPasswordInput {
   clientMutationId: String
   newPassword: String!
   resetToken: String!
-  userId: Int!
+  userId: UUID!
 }
 
 """The output of our `resetPassword` mutation."""
@@ -508,6 +4190,530 @@ type Subscription {
   currentUserUpdated: UserSubscriptionPayload
 }
 
+"""All input for the `updateAccountBalance` mutation."""
+input UpdateAccountBalanceInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `AccountBalance` being updated.
+  """
+  patch: AccountBalancePatch!
+}
+
+"""The output of our update `AccountBalance` mutation."""
+type UpdateAccountBalancePayload {
+  """The `AccountBalance` that was updated by this mutation."""
+  accountBalance: AccountBalance
+
+  """An edge for our `AccountBalance`. May be used by Relay 1."""
+  accountBalanceEdge(
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesEdge
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditVintage` that is related to this `AccountBalance`.
+  """
+  creditVintage: CreditVintage
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `AccountBalance`."""
+  wallet: Wallet
+}
+
+"""All input for the `updateCreditClass` mutation."""
+input UpdateCreditClassInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `CreditClass` being updated.
+  """
+  patch: CreditClassPatch!
+}
+
+"""The output of our update `CreditClass` mutation."""
+type UpdateCreditClassPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CreditClass` that was updated by this mutation."""
+  creditClass: CreditClass
+
+  """An edge for our `CreditClass`. May be used by Relay 1."""
+  creditClassEdge(
+    """The method to use when ordering `CreditClass`."""
+    orderBy: [CreditClassesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassesEdge
+
+  """Reads a single `Party` that is related to this `CreditClass`."""
+  designer: Party
+
+  """Reads a single `Methodology` that is related to this `CreditClass`."""
+  methodology: Methodology
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateCreditClassVersion` mutation."""
+input UpdateCreditClassVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  createdAt: Datetime!
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `CreditClassVersion` being updated.
+  """
+  patch: CreditClassVersionPatch!
+}
+
+"""The output of our update `CreditClassVersion` mutation."""
+type UpdateCreditClassVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `CreditClass` that is related to this `CreditClassVersion`.
+  """
+  creditClassById: CreditClass
+
+  """The `CreditClassVersion` that was updated by this mutation."""
+  creditClassVersion: CreditClassVersion
+
+  """An edge for our `CreditClassVersion`. May be used by Relay 1."""
+  creditClassVersionEdge(
+    """The method to use when ordering `CreditClassVersion`."""
+    orderBy: [CreditClassVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditClassVersionsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateCreditVintage` mutation."""
+input UpdateCreditVintageInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `CreditVintage` being updated.
+  """
+  patch: CreditVintagePatch!
+}
+
+"""The output of our update `CreditVintage` mutation."""
+type UpdateCreditVintagePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `CreditVintage`."""
+  creditClass: CreditClass
+
+  """The `CreditVintage` that was updated by this mutation."""
+  creditVintage: CreditVintage
+
+  """An edge for our `CreditVintage`. May be used by Relay 1."""
+  creditVintageEdge(
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesEdge
+
+  """Reads a single `Wallet` that is related to this `CreditVintage`."""
+  issuer: Wallet
+
+  """Reads a single `Project` that is related to this `CreditVintage`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateEvent` mutation."""
+input UpdateEventInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Event` being updated.
+  """
+  patch: EventPatch!
+}
+
+"""The output of our update `Event` mutation."""
+type UpdateEventPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Event` that was updated by this mutation."""
+  event: Event
+
+  """An edge for our `Event`. May be used by Relay 1."""
+  eventEdge(
+    """The method to use when ordering `Event`."""
+    orderBy: [EventsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): EventsEdge
+
+  """Reads a single `Project` that is related to this `Event`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateMethodology` mutation."""
+input UpdateMethodologyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Methodology` being updated.
+  """
+  patch: MethodologyPatch!
+}
+
+"""The output of our update `Methodology` mutation."""
+type UpdateMethodologyPayload {
+  """Reads a single `Party` that is related to this `Methodology`."""
+  author: Party
+
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Methodology` that was updated by this mutation."""
+  methodology: Methodology
+
+  """An edge for our `Methodology`. May be used by Relay 1."""
+  methodologyEdge(
+    """The method to use when ordering `Methodology`."""
+    orderBy: [MethodologiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateMethodologyVersion` mutation."""
+input UpdateMethodologyVersionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  createdAt: Datetime!
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `MethodologyVersion` being updated.
+  """
+  patch: MethodologyVersionPatch!
+}
+
+"""The output of our update `MethodologyVersion` mutation."""
+type UpdateMethodologyVersionPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Reads a single `Methodology` that is related to this `MethodologyVersion`.
+  """
+  methodologyById: Methodology
+
+  """The `MethodologyVersion` that was updated by this mutation."""
+  methodologyVersion: MethodologyVersion
+
+  """An edge for our `MethodologyVersion`. May be used by Relay 1."""
+  methodologyVersionEdge(
+    """The method to use when ordering `MethodologyVersion`."""
+    orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MethodologyVersionsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateMrv` mutation."""
+input UpdateMrvInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Mrv` being updated.
+  """
+  patch: MrvPatch!
+}
+
+"""The output of our update `Mrv` mutation."""
+type UpdateMrvPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Mrv` that was updated by this mutation."""
+  mrv: Mrv
+
+  """An edge for our `Mrv`. May be used by Relay 1."""
+  mrvEdge(
+    """The method to use when ordering `Mrv`."""
+    orderBy: [MrvsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MrvsEdge
+
+  """Reads a single `Project` that is related to this `Mrv`."""
+  project: Project
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateOrganization` mutation."""
+input UpdateOrganizationInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Organization` being updated.
+  """
+  patch: OrganizationPatch!
+}
+
+"""The output of our update `Organization` mutation."""
+type UpdateOrganizationPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Organization` that was updated by this mutation."""
+  organization: Organization
+
+  """An edge for our `Organization`. May be used by Relay 1."""
+  organizationEdge(
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsEdge
+
+  """Reads a single `User` that is related to this `Organization`."""
+  owner: User
+
+  """Reads a single `Party` that is related to this `Organization`."""
+  party: Party
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Wallet` that is related to this `Organization`."""
+  wallet: Wallet
+}
+
+"""All input for the `updateParty` mutation."""
+input UpdatePartyInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Party` being updated.
+  """
+  patch: PartyPatch!
+}
+
+"""The output of our update `Party` mutation."""
+type UpdatePartyPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Party` that was updated by this mutation."""
+  party: Party
+
+  """An edge for our `Party`. May be used by Relay 1."""
+  partyEdge(
+    """The method to use when ordering `Party`."""
+    orderBy: [PartiesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PartiesEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+}
+
+"""All input for the `updateProject` mutation."""
+input UpdateProjectInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Project` being updated.
+  """
+  patch: ProjectPatch!
+}
+
+"""The output of our update `Project` mutation."""
+type UpdateProjectPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """Reads a single `CreditClass` that is related to this `Project`."""
+  creditClass: CreditClass
+
+  """Reads a single `Party` that is related to this `Project`."""
+  developer: Party
+
+  """Reads a single `Party` that is related to this `Project`."""
+  landOwner: Party
+
+  """The `Project` that was updated by this mutation."""
+  project: Project
+
+  """An edge for our `Project`. May be used by Relay 1."""
+  projectEdge(
+    """The method to use when ordering `Project`."""
+    orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): ProjectsEdge
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Registry` that is related to this `Project`."""
+  registry: Registry
+
+  """Reads a single `Party` that is related to this `Project`."""
+  steward: Party
+}
+
+"""All input for the `updateRegistry` mutation."""
+input UpdateRegistryInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Registry` being updated.
+  """
+  patch: RegistryPatch!
+}
+
+"""The output of our update `Registry` mutation."""
+type UpdateRegistryPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Registry` that was updated by this mutation."""
+  registry: Registry
+
+  """An edge for our `Registry`. May be used by Relay 1."""
+  registryEdge(
+    """The method to use when ordering `Registry`."""
+    orderBy: [RegistriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RegistriesEdge
+}
+
 """All input for the `updateUser` mutation."""
 input UpdateUserInput {
   """
@@ -517,7 +4723,7 @@ input UpdateUserInput {
   clientMutationId: String
 
   """Unique identifier for the user."""
-  id: Int!
+  id: UUID!
 
   """
   An object where the defined keys will be set on the `User` being updated.
@@ -533,6 +4739,9 @@ type UpdateUserPayload {
   """
   clientMutationId: String
 
+  """Reads a single `Party` that is related to this `User`."""
+  party: Party
+
   """
   Our root query field type. Allows us to run any query from our mutation payload.
   """
@@ -546,6 +4755,47 @@ type UpdateUserPayload {
     """The method to use when ordering `User`."""
     orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
   ): UsersEdge
+
+  """Reads a single `Wallet` that is related to this `User`."""
+  wallet: Wallet
+}
+
+"""All input for the `updateWallet` mutation."""
+input UpdateWalletInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: UUID!
+
+  """
+  An object where the defined keys will be set on the `Wallet` being updated.
+  """
+  patch: WalletPatch!
+}
+
+"""The output of our update `Wallet` mutation."""
+type UpdateWalletPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """The `Wallet` that was updated by this mutation."""
+  wallet: Wallet
+
+  """An edge for our `Wallet`. May be used by Relay 1."""
+  walletEdge(
+    """The method to use when ordering `Wallet`."""
+    orderBy: [WalletsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): WalletsEdge
 }
 
 """A user who can log in to the application."""
@@ -553,17 +4803,83 @@ type User {
   """Optional avatar URL."""
   avatarUrl: String
   createdAt: Datetime!
+
+  """Public-facing first name (or pseudonym) of the user."""
+  firstName: String
   hasPassword: Boolean
 
   """Unique identifier for the user."""
-  id: Int!
+  id: UUID!
 
   """If true, the user has elevated privileges."""
   isAdmin: Boolean!
   isVerified: Boolean!
 
-  """Public-facing name (or pseudonym) of the user."""
-  name: String
+  """Public-facing last name (or pseudonym) of the user."""
+  lastName: String
+
+  """Reads and enables pagination through a set of `OrganizationMember`."""
+  organizationMembersByMemberId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationMemberCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `OrganizationMember`."""
+    orderBy: [OrganizationMembersOrderBy!] = [NATURAL]
+  ): OrganizationMembersConnection!
+
+  """Reads and enables pagination through a set of `Organization`."""
+  organizationsByOwnerId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsConnection!
+
+  """Reads a single `Party` that is related to this `User`."""
+  party: Party
+  partyId: UUID
+  type: PartyType!
   updatedAt: Datetime!
 
   """Reads and enables pagination through a set of `UserAuthentication`."""
@@ -614,6 +4930,10 @@ type User {
 
   """Public-facing username (or 'handle') of the user."""
   username: String!
+
+  """Reads a single `Wallet` that is related to this `User`."""
+  wallet: Wallet
+  walletId: UUID
 }
 
 """
@@ -621,7 +4941,7 @@ Contains information about the login providers this user has used, so that they 
 """
 type UserAuthentication {
   createdAt: Datetime!
-  id: Int!
+  id: UUID!
 
   """A unique identifier for the user within the login service."""
   identifier: String!
@@ -632,7 +4952,7 @@ type UserAuthentication {
 
   """Reads a single `User` that is related to this `UserAuthentication`."""
   user: User
-  userId: Int!
+  userId: UUID!
 }
 
 """
@@ -641,13 +4961,13 @@ tested for equality and combined with a logical ‘and.’
 """
 input UserAuthenticationCondition {
   """Checks for equality with the object’s `id` field."""
-  id: Int
+  id: UUID
 
   """Checks for equality with the object’s `service` field."""
   service: String
 
   """Checks for equality with the object’s `userId` field."""
-  userId: Int
+  userId: UUID
 }
 
 """Methods to use when ordering `UserAuthentication`."""
@@ -663,13 +4983,30 @@ enum UserAuthenticationsOrderBy {
   USER_ID_DESC
 }
 
+"""
+A condition to be used against `User` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input UserCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+
+  """Checks for equality with the object’s `partyId` field."""
+  partyId: UUID
+
+  """Checks for equality with the object’s `username` field."""
+  username: String
+
+  """Checks for equality with the object’s `walletId` field."""
+  walletId: UUID
+}
+
 """Information about a user's email address."""
 type UserEmail {
   createdAt: Datetime!
 
-  """The users email address, in `a@b.c` format."""
+  """The user email address, in `a@b.c` format."""
   email: String!
-  id: Int!
+  id: UUID!
   isPrimary: Boolean!
 
   """
@@ -681,7 +5018,7 @@ type UserEmail {
 
   """Reads a single `User` that is related to this `UserEmail`."""
   user: User
-  userId: Int!
+  userId: UUID!
 }
 
 """
@@ -690,18 +5027,18 @@ for equality and combined with a logical ‘and.’
 """
 input UserEmailCondition {
   """Checks for equality with the object’s `id` field."""
-  id: Int
+  id: UUID
 
   """Checks for equality with the object’s `isPrimary` field."""
   isPrimary: Boolean
 
   """Checks for equality with the object’s `userId` field."""
-  userId: Int
+  userId: UUID
 }
 
 """An input for mutations affecting `UserEmail`"""
 input UserEmailInput {
-  """The users email address, in `a@b.c` format."""
+  """The user email address, in `a@b.c` format."""
   email: String!
 }
 
@@ -749,11 +5086,34 @@ input UserPatch {
   """Optional avatar URL."""
   avatarUrl: String
 
-  """Public-facing name (or pseudonym) of the user."""
-  name: String
+  """Public-facing first name (or pseudonym) of the user."""
+  firstName: String
+
+  """Public-facing last name (or pseudonym) of the user."""
+  lastName: String
+  partyId: UUID
+  type: PartyType
 
   """Public-facing username (or 'handle') of the user."""
   username: String
+  walletId: UUID
+}
+
+"""A connection to a list of `User` values."""
+type UsersConnection {
+  """
+  A list of edges which contains the `User` and cursor to aid in pagination.
+  """
+  edges: [UsersEdge!]!
+
+  """A list of `User` objects."""
+  nodes: [User!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `User` you could get from the connection."""
+  totalCount: Int!
 }
 
 """A `User` edge in the connection."""
@@ -770,16 +5130,25 @@ enum UsersOrderBy {
   ID_ASC
   ID_DESC
   NATURAL
+  PARTY_ID_ASC
+  PARTY_ID_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
   USERNAME_ASC
   USERNAME_DESC
+  WALLET_ID_ASC
+  WALLET_ID_DESC
 }
 
 type UserSubscriptionPayload {
   event: String
   user: User
 }
+
+"""
+A universally unique identifier as defined by [RFC 4122](https://tools.ietf.org/html/rfc4122).
+"""
+scalar UUID
 
 """All input for the `verifyEmail` mutation."""
 input VerifyEmailInput {
@@ -789,7 +5158,7 @@ input VerifyEmailInput {
   """
   clientMutationId: String
   token: String!
-  userEmailId: Int!
+  userEmailId: UUID!
 }
 
 """The output of our `verifyEmail` mutation."""
@@ -805,4 +5174,212 @@ type VerifyEmailPayload {
   """
   query: Query
   success: Boolean
+}
+
+type Wallet {
+  """Reads and enables pagination through a set of `AccountBalance`."""
+  accountBalances(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: AccountBalanceCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `AccountBalance`."""
+    orderBy: [AccountBalancesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): AccountBalancesConnection!
+  addr: String!
+  createdAt: Datetime!
+
+  """Reads and enables pagination through a set of `CreditClassIssuer`."""
+  creditClassIssuersByIssuerId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditClassIssuerCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditClassIssuer`."""
+    orderBy: [CreditClassIssuersOrderBy!] = [NATURAL]
+  ): CreditClassIssuersConnection!
+
+  """Reads and enables pagination through a set of `CreditVintage`."""
+  creditVintagesByIssuerId(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CreditVintageCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `CreditVintage`."""
+    orderBy: [CreditVintagesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CreditVintagesConnection!
+  id: UUID!
+
+  """Reads and enables pagination through a set of `Organization`."""
+  organizations(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OrganizationCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Organization`."""
+    orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): OrganizationsConnection!
+  updatedAt: Datetime
+
+  """Reads and enables pagination through a set of `User`."""
+  users(
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: UserCondition
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersConnection!
+}
+
+"""
+A condition to be used against `Wallet` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input WalletCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: UUID
+}
+
+"""An input for mutations affecting `Wallet`"""
+input WalletInput {
+  addr: String!
+  updatedAt: Datetime
+}
+
+"""
+Represents an update to a `Wallet`. Fields that are set will be updated.
+"""
+input WalletPatch {
+  addr: String
+  updatedAt: Datetime
+}
+
+"""A connection to a list of `Wallet` values."""
+type WalletsConnection {
+  """
+  A list of edges which contains the `Wallet` and cursor to aid in pagination.
+  """
+  edges: [WalletsEdge!]!
+
+  """A list of `Wallet` objects."""
+  nodes: [Wallet!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Wallet` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Wallet` edge in the connection."""
+type WalletsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Wallet` at the end of the edge."""
+  node: Wallet!
+}
+
+"""Methods to use when ordering `Wallet`."""
+enum WalletsOrderBy {
+  ID_ASC
+  ID_DESC
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
 }

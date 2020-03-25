@@ -34,7 +34,8 @@ describe("when account doesn't already exist", () => {
         "123456",
         {
           email: "github.user.123456@example.com",
-          name: "GitHub User123456",
+          first_name: "GitHub",
+          last_name: "User123456",
           avatar_url: "http://example.com/avatar.jpg",
           username: "GHU123",
         },
@@ -42,7 +43,8 @@ describe("when account doesn't already exist", () => {
       );
       expect(user).toBeTruthy();
       expect(user.username).toEqual("GHU123");
-      expect(user.name).toEqual("GitHub User123456");
+      expect(user.first_name).toEqual("GitHub");
+      expect(user.last_name).toEqual("User123456");
       expect(user.avatar_url).toEqual("http://example.com/avatar.jpg");
       expect(user.is_admin).toEqual(false);
       expect(user.is_verified).toEqual(true);
@@ -50,12 +52,16 @@ describe("when account doesn't already exist", () => {
       Object {
         "avatar_url": "http://example.com/avatar.jpg",
         "created_at": "[DATE]",
+        "first_name": "GitHub",
         "id": "[ID]",
         "is_admin": false,
         "is_verified": true,
-        "name": "GitHub User123456",
+        "last_name": "User123456",
+        "party_id": null,
+        "type": "user",
         "updated_at": "[DATE]",
         "username": "GHU123",
+        "wallet_id": null,
       }
     `);
     }));
@@ -73,8 +79,10 @@ describe("when account doesn't already exist", () => {
         {}
       );
       expect(user).toBeTruthy();
-      expect(user.username).toMatch(/^user(?:[1-9][0-9]+)?$/);
-      expect(user.name).toEqual(null);
+      // expect(user.username).toMatch(/^user(?:[1-9][0-9]+)?$/);
+      expect(user.username).toEqual("github.user.123456@example.com");
+      expect(user.first_name).toEqual(null);
+      expect(user.last_name).toEqual(null);
       expect(user.avatar_url).toEqual(null);
       expect(user.is_admin).toEqual(false);
       expect(user.is_verified).toEqual(true);

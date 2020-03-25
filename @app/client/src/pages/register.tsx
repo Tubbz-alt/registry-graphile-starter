@@ -56,7 +56,8 @@ export default Register;
  * These are the values in our form
  */
 interface FormValues {
-  name: string;
+  firstName: string;
+  lastName: string;
   username: string;
   email: string;
   password: string;
@@ -120,7 +121,8 @@ function RegistrationForm({
             username: values.username,
             email: values.email,
             password: values.password,
-            name: values.name,
+            firstName: values.firstName,
+            lastName: values.lastName,
           },
         });
         // Success: refetch
@@ -246,29 +248,43 @@ function RegistrationForm({
     <Form {...formItemLayout} onSubmit={handleSubmit}>
       <Form.Item
         label={
-          <span data-cy="registerpage-name-label">
-            Name&nbsp;
-            <Tooltip title="What is your name?">
+          <span data-cy="registerpage-first-name-label">
+            First Name&nbsp;
+            <Tooltip title="What is your first name?">
               <Icon type="question-circle-o" />
             </Tooltip>
           </span>
         }
       >
-        {getFieldDecorator("name", {
+        {getFieldDecorator("firstName", {
           rules: [
             {
               required: true,
-              message: "Please input your name.",
+              message: "Please input your first name.",
               whitespace: true,
             },
           ],
-        })(
-          <Input
-            ref={focusElement}
-            autoComplete="name"
-            data-cy="registerpage-input-name"
-          />
-        )}
+        })(<Input ref={focusElement} data-cy="registerpage-input-first-name" />)}
+      </Form.Item>
+      <Form.Item
+        label={
+          <span data-cy="registerpage-last-name-label">
+            Last Name&nbsp;
+            <Tooltip title="What is your last name?">
+              <Icon type="question-circle-o" />
+            </Tooltip>
+          </span>
+        }
+      >
+        {getFieldDecorator("lastName", {
+          rules: [
+            {
+              required: true,
+              message: "Please input your last name.",
+              whitespace: true,
+            },
+          ],
+        })(<Input ref={focusElement} data-cy="registerpage-input-last-name" />)}
       </Form.Item>
       <Form.Item
         label={

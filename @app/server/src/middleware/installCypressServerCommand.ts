@@ -96,7 +96,7 @@ async function runCommand(
 ): Promise<object | null> {
   if (command === "clearTestUsers") {
     await rootPgPool.query(
-      "delete from app_public.users where username like 'testuser%'"
+      "delete from app_public.user where username like 'testuser%'"
     );
     return { success: true };
   } else if (command === "createUser") {
@@ -107,7 +107,8 @@ async function runCommand(
       username = "testuser",
       email = `${username}@example.com`,
       verified = false,
-      name = username,
+      firstName = "test",
+      lastName = "user",
       avatarUrl = null,
       password = "TestUserPassword",
     } = payload;
@@ -118,7 +119,8 @@ async function runCommand(
       username,
       email,
       verified,
-      name,
+      firstName,
+      lastName,
       avatarUrl,
       password,
     });
@@ -136,7 +138,8 @@ async function runCommand(
       username = "testuser",
       email = `${username}@example.com`,
       verified = false,
-      name = username,
+      firstName = "test",
+      lastName = "user",      
       avatarUrl = null,
       password = "TestUserPassword",
       next = "/",
@@ -145,7 +148,8 @@ async function runCommand(
       username,
       email,
       verified,
-      name,
+      firstName,
+      lastName,
       avatarUrl,
       password,
     });
@@ -169,14 +173,16 @@ async function reallyCreateUser(
     username,
     email,
     verified,
-    name,
+    firstName,
+    lastName,
     avatarUrl,
     password,
   }: {
     username?: string;
     email?: string;
     verified?: boolean;
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     avatarUrl?: string;
     password?: string;
   }
@@ -188,11 +194,12 @@ async function reallyCreateUser(
         username := $1,
         email := $2,
         email_is_verified := $3,
-        name := $4,
-        avatar_url := $5,
-        password := $6
+        first_name := $4,
+        last_name := $5,
+        avatar_url := $6,
+        password := $7
       )`,
-    [username, email, verified, name, avatarUrl, password]
+    [username, email, verified, firstName, lastName, avatarUrl, password]
   );
   return user;
 }

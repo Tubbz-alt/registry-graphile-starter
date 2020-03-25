@@ -14,18 +14,20 @@ afterAll(teardown);
 test("Register", async () => {
   await runGraphQLQuery(
     // GraphQL query goes here:
-    `mutation Register($username: String!, $password: String!, $name: String!, $email: String!) {
+    `mutation Register($username: String!, $password: String!, $firstName: String!, $lastName: String!, $email: String!) {
       register(
         input: {
           username: $username
           password: $password
-          name: $name
+          firstName: $firstName
+          lastName: $lastName
           email: $email
         }
       ) {
         user {
           id
-          name
+          firstName
+          lastName
           avatarUrl
           createdAt
           isAdmin
@@ -41,7 +43,8 @@ test("Register", async () => {
     {
       username: "testuser",
       password: "SECURE_PASSWORD",
-      name: "Test User",
+      firstName: "Test",
+      lastName: "User",
       email: "test.user@example.org",
     },
 
@@ -60,10 +63,11 @@ test("Register", async () => {
         Object {
           "avatarUrl": null,
           "createdAt": "[timestamp]",
+          "firstName": "Test",
           "id": "[id]",
           "isAdmin": false,
           "isVerified": false,
-          "name": "Test User",
+          "lastName": "User",
           "updatedAt": "[timestamp]",
           "username": "testuser",
         }
@@ -74,7 +78,7 @@ test("Register", async () => {
       // function - e.g. to check that your mutation made the changes you'd
       // expect.
       const { rows } = await asRoot(pgClient, () =>
-        pgClient.query(`SELECT * FROM app_public.users WHERE id = $1`, [id])
+        pgClient.query(`SELECT * FROM app_public.user WHERE id = $1`, [id])
       );
       if (rows.length !== 1) {
         throw new Error("User not found!");

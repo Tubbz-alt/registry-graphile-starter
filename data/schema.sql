@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.6 (Debian 11.6-1.pgdg90+1)
--- Dumped by pg_dump version 11.6 (Debian 11.6-1.pgdg90+1)
+-- Dumped from database version 10.11
+-- Dumped by pg_dump version 10.11
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -38,6 +38,20 @@ CREATE SCHEMA app_public;
 
 
 --
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
 -- Name: citext; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -66,6 +80,20 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
+
+
+--
 -- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -77,6 +105,29 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: party_type; Type: TYPE; Schema: app_public; Owner: -
+--
+
+CREATE TYPE app_public.party_type AS ENUM (
+    'user',
+    'organization'
+);
+
+
+--
+-- Name: project_state; Type: TYPE; Schema: app_public; Owner: -
+--
+
+CREATE TYPE app_public.project_state AS ENUM (
+    'proposed',
+    'pending_approval',
+    'active',
+    'hold',
+    'ended'
+);
 
 
 --
@@ -100,80 +151,91 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: users; Type: TABLE; Schema: app_public; Owner: -
+-- Name: user; Type: TABLE; Schema: app_public; Owner: -
 --
 
-CREATE TABLE app_public.users (
-    id integer NOT NULL,
+CREATE TABLE app_public."user" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     username public.citext NOT NULL,
-    name text,
+    first_name text,
+    last_name text,
     avatar_url text,
     is_admin boolean DEFAULT false NOT NULL,
     is_verified boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT users_avatar_url_check CHECK ((avatar_url ~ '^https?://[^/]+'::text)),
-    CONSTRAINT users_username_check CHECK (((length((username)::text) >= 2) AND (length((username)::text) <= 24) AND (username OPERATOR(public.~) '^[a-zA-Z]([a-zA-Z0-9][_]?)+$'::public.citext)))
+    wallet_id uuid,
+    party_id uuid,
+    type app_public.party_type DEFAULT 'user'::app_public.party_type NOT NULL,
+    CONSTRAINT user_type_check CHECK ((type = 'user'::app_public.party_type))
 );
 
 
 --
--- Name: TABLE users; Type: COMMENT; Schema: app_public; Owner: -
+-- Name: TABLE "user"; Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON TABLE app_public.users IS 'A user who can log in to the application.';
-
-
---
--- Name: COLUMN users.id; Type: COMMENT; Schema: app_public; Owner: -
---
-
-COMMENT ON COLUMN app_public.users.id IS 'Unique identifier for the user.';
+COMMENT ON TABLE app_public."user" IS 'A user who can log in to the application.';
 
 
 --
--- Name: COLUMN users.username; Type: COMMENT; Schema: app_public; Owner: -
+-- Name: COLUMN "user".id; Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON COLUMN app_public.users.username IS 'Public-facing username (or ''handle'') of the user.';
-
-
---
--- Name: COLUMN users.name; Type: COMMENT; Schema: app_public; Owner: -
---
-
-COMMENT ON COLUMN app_public.users.name IS 'Public-facing name (or pseudonym) of the user.';
+COMMENT ON COLUMN app_public."user".id IS 'Unique identifier for the user.';
 
 
 --
--- Name: COLUMN users.avatar_url; Type: COMMENT; Schema: app_public; Owner: -
+-- Name: COLUMN "user".username; Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON COLUMN app_public.users.avatar_url IS 'Optional avatar URL.';
-
-
---
--- Name: COLUMN users.is_admin; Type: COMMENT; Schema: app_public; Owner: -
---
-
-COMMENT ON COLUMN app_public.users.is_admin IS 'If true, the user has elevated privileges.';
+COMMENT ON COLUMN app_public."user".username IS 'Public-facing username (or ''handle'') of the user.';
 
 
 --
--- Name: link_or_register_user(integer, character varying, character varying, json, json); Type: FUNCTION; Schema: app_private; Owner: -
+-- Name: COLUMN "user".first_name; Type: COMMENT; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_private.link_or_register_user(f_user_id integer, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) RETURNS app_public.users
+COMMENT ON COLUMN app_public."user".first_name IS 'Public-facing first name (or pseudonym) of the user.';
+
+
+--
+-- Name: COLUMN "user".last_name; Type: COMMENT; Schema: app_public; Owner: -
+--
+
+COMMENT ON COLUMN app_public."user".last_name IS 'Public-facing last name (or pseudonym) of the user.';
+
+
+--
+-- Name: COLUMN "user".avatar_url; Type: COMMENT; Schema: app_public; Owner: -
+--
+
+COMMENT ON COLUMN app_public."user".avatar_url IS 'Optional avatar URL.';
+
+
+--
+-- Name: COLUMN "user".is_admin; Type: COMMENT; Schema: app_public; Owner: -
+--
+
+COMMENT ON COLUMN app_public."user".is_admin IS 'If true, the user has elevated privileges.';
+
+
+--
+-- Name: link_or_register_user(uuid, character varying, character varying, json, json); Type: FUNCTION; Schema: app_private; Owner: -
+--
+
+CREATE FUNCTION app_private.link_or_register_user(f_user_id uuid, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) RETURNS app_public."user"
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
-  v_matched_user_id int;
-  v_matched_authentication_id int;
+  v_matched_user_id uuid;
+  v_matched_authentication_id uuid;
   v_email citext;
-  v_name text;
+  v_first_name text;
+  v_last_name text;
   v_avatar_url text;
-  v_user app_public.users;
+  v_user app_public.user;
   v_user_email app_public.user_emails;
 begin
   -- See if a user account already matches these details
@@ -189,7 +251,8 @@ begin
   end if;
 
   v_email = f_profile ->> 'email';
-  v_name := f_profile ->> 'name';
+  v_first_name := f_profile ->> 'first_name';
+  v_last_name := f_profile ->> 'last_name';
   v_avatar_url := f_profile ->> 'avatar_url';
 
   if v_matched_authentication_id is null then
@@ -222,10 +285,11 @@ begin
       update app_private.user_authentication_secrets
         set details = f_auth_details
         where user_authentication_id = v_matched_authentication_id;
-      update app_public.users
+      update app_public.user
         set
-          name = coalesce(users.name, v_name),
-          avatar_url = coalesce(users.avatar_url, v_avatar_url)
+          first_name = coalesce("user".first_name, v_first_name),
+          last_name = coalesce("user".last_name, v_last_name),
+          avatar_url = coalesce("user".avatar_url, v_avatar_url)
         where id = v_matched_user_id
         returning  * into v_user;
       return v_user;
@@ -243,10 +307,10 @@ $$;
 
 
 --
--- Name: FUNCTION link_or_register_user(f_user_id integer, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json); Type: COMMENT; Schema: app_private; Owner: -
+-- Name: FUNCTION link_or_register_user(f_user_id uuid, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json); Type: COMMENT; Schema: app_private; Owner: -
 --
 
-COMMENT ON FUNCTION app_private.link_or_register_user(f_user_id integer, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) IS 'If you''re logged in, this will link an additional OAuth login to your account if necessary. If you''re logged out it may find if an account already exists (based on OAuth details or email address) and return that, or create a new user account if necessary.';
+COMMENT ON FUNCTION app_private.link_or_register_user(f_user_id uuid, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) IS 'If you''re logged in, this will link an additional OAuth login to your account if necessary. If you''re logged out it may find if an account already exists (based on OAuth details or email address) and return that, or create a new user account if necessary.';
 
 
 --
@@ -255,7 +319,7 @@ COMMENT ON FUNCTION app_private.link_or_register_user(f_user_id integer, f_servi
 
 CREATE TABLE app_private.sessions (
     uuid uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    user_id integer NOT NULL,
+    user_id uuid NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     last_active timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -267,30 +331,29 @@ CREATE TABLE app_private.sessions (
 
 CREATE FUNCTION app_private.login(username public.citext, password text) RETURNS app_private.sessions
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 declare
-  v_user app_public.users;
+  v_user app_public.user;
   v_user_secret app_private.user_secrets;
   v_login_attempt_window_duration interval = interval '5 minutes';
   v_session app_private.sessions;
 begin
   if username like '%@%' then
     -- It's an email
-    select users.* into v_user
-    from app_public.users
+    select "user".* into v_user
+    from app_public.user
     inner join app_public.user_emails
-    on (user_emails.user_id = users.id)
+    on (user_emails.user_id = "user".id)
     where user_emails.email = login.username
     order by
       user_emails.is_verified desc, -- Prefer verified email
-      user_emails.created_at asc -- Failing that, prefer the first registered (unverified users _should_ verify before logging in)
+      user_emails.created_at asc -- Failing that, prefer the first registered (unverified user _should_ verify before logging in)
     limit 1;
   else
     -- It's a username
-    select users.* into v_user
-    from app_public.users
-    where users.username = login.username;
+    select "user".* into v_user
+    from app_public.user
+    where "user".username = login.username;
   end if;
 
   if not (v_user is null) then
@@ -345,15 +408,15 @@ COMMENT ON FUNCTION app_private.login(username public.citext, password text) IS 
 
 
 --
--- Name: really_create_user(public.citext, text, boolean, text, text, text); Type: FUNCTION; Schema: app_private; Owner: -
+-- Name: really_create_user(public.citext, text, boolean, text, text, text, text); Type: FUNCTION; Schema: app_private; Owner: -
 --
 
-CREATE FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, name text, avatar_url text, password text DEFAULT NULL::text) RETURNS app_public.users
+CREATE FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, first_name text, last_name text, avatar_url text, password text DEFAULT NULL::text) RETURNS app_public."user"
     LANGUAGE plpgsql
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
-  v_user app_public.users;
+  v_user app_public.user;
   v_username citext = username;
 begin
   if password is not null then
@@ -364,8 +427,8 @@ begin
   end if;
 
   -- Insert the new user
-  insert into app_public.users (username, name, avatar_url) values
-    (v_username, name, avatar_url)
+  insert into app_public.user (username, first_name, last_name, avatar_url) values
+    (v_username, first_name, last_name, avatar_url)
     returning * into v_user;
 
 	-- Add the user's email
@@ -380,7 +443,7 @@ begin
   end if;
 
   -- Refresh the user
-  select * into v_user from app_public.users where id = v_user.id;
+  select * into v_user from app_public.user where id = v_user.id;
 
   return v_user;
 end;
@@ -388,40 +451,42 @@ $$;
 
 
 --
--- Name: FUNCTION really_create_user(username public.citext, email text, email_is_verified boolean, name text, avatar_url text, password text); Type: COMMENT; Schema: app_private; Owner: -
+-- Name: FUNCTION really_create_user(username public.citext, email text, email_is_verified boolean, first_name text, last_name text, avatar_url text, password text); Type: COMMENT; Schema: app_private; Owner: -
 --
 
-COMMENT ON FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, name text, avatar_url text, password text) IS 'Creates a user account. All arguments are optional, it trusts the calling method to perform sanitisation.';
+COMMENT ON FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, first_name text, last_name text, avatar_url text, password text) IS 'Creates a user account. All arguments are optional, it trusts the calling method to perform sanitisation.';
 
 
 --
 -- Name: register_user(character varying, character varying, json, json, boolean); Type: FUNCTION; Schema: app_private; Owner: -
 --
 
-CREATE FUNCTION app_private.register_user(f_service character varying, f_identifier character varying, f_profile json, f_auth_details json, f_email_is_verified boolean DEFAULT false) RETURNS app_public.users
+CREATE FUNCTION app_private.register_user(f_service character varying, f_identifier character varying, f_profile json, f_auth_details json, f_email_is_verified boolean DEFAULT false) RETURNS app_public."user"
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
-  v_user app_public.users;
+  v_user app_public.user;
   v_email citext;
-  v_name text;
+  v_first_name text;
+  v_last_name text;
   v_username citext;
   v_avatar_url text;
-  v_user_authentication_id int;
+  v_user_authentication_id uuid;
 begin
   -- Extract data from the user’s OAuth profile data.
   v_email := f_profile ->> 'email';
-  v_name := f_profile ->> 'name';
+  v_first_name := f_profile ->> 'first_name';
+  v_last_name := f_profile ->> 'last_name';
   v_username := f_profile ->> 'username';
   v_avatar_url := f_profile ->> 'avatar_url';
 
   -- Sanitise the username, and make it unique if necessary.
   if v_username is null then
-    v_username = coalesce(v_name, 'user');
+    v_username = coalesce(v_email, 'user');
   end if;
-  v_username = regexp_replace(v_username, '^[^a-z]+', '', 'i');
-  v_username = regexp_replace(v_username, '[^a-z0-9]+', '_', 'i');
+  -- v_username = regexp_replace(v_username, '^[^a-z]+', '', 'i');
+  -- v_username = regexp_replace(v_username, '[^a-z0-9]+', '_', 'i');
   if v_username is null or length(v_username) < 3 then
     v_username = 'user';
   end if;
@@ -433,8 +498,8 @@ begin
   ) into v_username from generate_series(0, 1000) i
   where not exists(
     select 1
-    from app_public.users
-    where users.username = (
+    from app_public.user
+    where "user".username = (
       case
       when i = 0 then v_username
       else v_username || i::text
@@ -448,7 +513,8 @@ begin
     username => v_username,
     email => v_email,
     email_is_verified => f_email_is_verified,
-    name => v_name,
+    first_name => v_first_name,
+    last_name => v_last_name,
     avatar_url => v_avatar_url
   );
 
@@ -476,7 +542,7 @@ COMMENT ON FUNCTION app_private.register_user(f_service character varying, f_ide
 
 CREATE FUNCTION app_private.tg__add_job() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 begin
   perform graphile_worker.add_job(tg_argv[0], json_build_object('id', NEW.id), coalesce(tg_argv[1], public.gen_random_uuid()::text));
@@ -498,7 +564,7 @@ COMMENT ON FUNCTION app_private.tg__add_job() IS 'Useful shortcut to create a jo
 
 CREATE FUNCTION app_private.tg__timestamps() RETURNS trigger
     LANGUAGE plpgsql
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 begin
   NEW.created_at = (case when TG_OP = 'INSERT' then NOW() else OLD.created_at end);
@@ -516,12 +582,27 @@ COMMENT ON FUNCTION app_private.tg__timestamps() IS 'This trigger should be call
 
 
 --
+-- Name: tg_user__make_first_user_admin(); Type: FUNCTION; Schema: app_private; Owner: -
+--
+
+CREATE FUNCTION app_private.tg_user__make_first_user_admin() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
+    AS $$
+begin
+  NEW.is_admin = true;
+  return NEW;
+end;
+$$;
+
+
+--
 -- Name: tg_user_email_secrets__insert_with_user_email(); Type: FUNCTION; Schema: app_private; Owner: -
 --
 
 CREATE FUNCTION app_private.tg_user_email_secrets__insert_with_user_email() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
   v_verification_token text;
@@ -548,7 +629,7 @@ COMMENT ON FUNCTION app_private.tg_user_email_secrets__insert_with_user_email() 
 
 CREATE FUNCTION app_private.tg_user_secrets__insert_with_user() RETURNS trigger
     LANGUAGE plpgsql
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 begin
   insert into app_private.user_secrets(user_id) values(NEW.id);
@@ -565,34 +646,18 @@ COMMENT ON FUNCTION app_private.tg_user_secrets__insert_with_user() IS 'Ensures 
 
 
 --
--- Name: tg_users__make_first_user_admin(); Type: FUNCTION; Schema: app_private; Owner: -
---
-
-CREATE FUNCTION app_private.tg_users__make_first_user_admin() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
-    AS $$
-begin
-  NEW.is_admin = true;
-  return NEW;
-end;
-$$;
-
-
---
 -- Name: change_password(text, text); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
 CREATE FUNCTION app_public.change_password(old_password text, new_password text) RETURNS boolean
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 declare
-  v_user app_public.users;
+  v_user app_public.user;
   v_user_secret app_private.user_secrets;
 begin
-  select users.* into v_user
-  from app_public.users
+  select "user".* into v_user
+  from app_public.user
   where id = app_public.current_user_id();
 
   if not (v_user is null) then
@@ -631,7 +696,7 @@ COMMENT ON FUNCTION app_public.change_password(old_password text, new_password t
 
 CREATE FUNCTION app_public.confirm_account_deletion(token text) RETURNS boolean
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
   v_user_secret app_private.user_secrets;
@@ -653,7 +718,7 @@ begin
   -- Check the token
   if v_user_secret.delete_account_token = token then
     -- Token passes; delete their account :(
-    delete from app_public.users where id = app_public.current_user_id();
+    delete from app_public.user where id = app_public.current_user_id();
     return true;
   end if;
 
@@ -691,10 +756,10 @@ COMMENT ON FUNCTION app_public.current_session_id() IS 'Handy method to get the 
 -- Name: current_user(); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public."current_user"() RETURNS app_public.users
+CREATE FUNCTION app_public."current_user"() RETURNS app_public."user"
     LANGUAGE sql STABLE
     AS $$
-  select users.* from app_public.users where id = app_public.current_user_id();
+  select "user".* from app_public.user where id = app_public.current_user_id();
 $$;
 
 
@@ -709,9 +774,9 @@ COMMENT ON FUNCTION app_public."current_user"() IS 'The currently logged in user
 -- Name: current_user_id(); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.current_user_id() RETURNS integer
+CREATE FUNCTION app_public.current_user_id() RETURNS uuid
     LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
   select user_id from app_private.sessions where uuid = app_public.current_session_id();
 $$;
@@ -730,7 +795,7 @@ COMMENT ON FUNCTION app_public.current_user_id() IS 'Handy method to get the cur
 
 CREATE FUNCTION app_public.forgot_password(email public.citext) RETURNS void
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
   v_user_email app_public.user_emails;
@@ -833,7 +898,7 @@ COMMENT ON FUNCTION app_public.forgot_password(email public.citext) IS 'If you''
 
 CREATE FUNCTION app_public.logout() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 begin
   -- Delete the session
@@ -849,8 +914,8 @@ $$;
 --
 
 CREATE TABLE app_public.user_emails (
-    id integer NOT NULL,
-    user_id integer DEFAULT app_public.current_user_id() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid DEFAULT app_public.current_user_id() NOT NULL,
     email public.citext NOT NULL,
     is_verified boolean DEFAULT false NOT NULL,
     is_primary boolean DEFAULT false NOT NULL,
@@ -872,7 +937,7 @@ COMMENT ON TABLE app_public.user_emails IS 'Information about a user''s email ad
 -- Name: COLUMN user_emails.email; Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON COLUMN app_public.user_emails.email IS 'The users email address, in `a@b.c` format.';
+COMMENT ON COLUMN app_public.user_emails.email IS 'The user email address, in `a@b.c` format.';
 
 
 --
@@ -883,12 +948,11 @@ COMMENT ON COLUMN app_public.user_emails.is_verified IS 'True if the user has is
 
 
 --
--- Name: make_email_primary(integer); Type: FUNCTION; Schema: app_public; Owner: -
+-- Name: make_email_primary(uuid); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.make_email_primary(email_id integer) RETURNS app_public.user_emails
-    LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+CREATE FUNCTION app_public.make_email_primary(email_id uuid) RETURNS app_public.user_emails
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 declare
   v_user_email app_public.user_emails;
@@ -909,10 +973,10 @@ $$;
 
 
 --
--- Name: FUNCTION make_email_primary(email_id integer); Type: COMMENT; Schema: app_public; Owner: -
+-- Name: FUNCTION make_email_primary(email_id uuid); Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON FUNCTION app_public.make_email_primary(email_id integer) IS 'Your primary email is where we''ll notify of account events; other emails may be used for discovery or login. Use this when you''re changing your email address.';
+COMMENT ON FUNCTION app_public.make_email_primary(email_id uuid) IS 'Your primary email is where we''ll notify of account events; other emails may be used for discovery or login. Use this when you''re changing your email address.';
 
 
 --
@@ -921,7 +985,7 @@ COMMENT ON FUNCTION app_public.make_email_primary(email_id integer) IS 'Your pri
 
 CREATE FUNCTION app_public.request_account_deletion() RETURNS boolean
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
   v_user_email app_public.user_emails;
@@ -973,12 +1037,11 @@ COMMENT ON FUNCTION app_public.request_account_deletion() IS 'Begin the account 
 
 
 --
--- Name: resend_email_verification_code(integer); Type: FUNCTION; Schema: app_public; Owner: -
+-- Name: resend_email_verification_code(uuid); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.resend_email_verification_code(email_id integer) RETURNS boolean
-    LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+CREATE FUNCTION app_public.resend_email_verification_code(email_id uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 begin
   if exists(
@@ -997,27 +1060,27 @@ $$;
 
 
 --
--- Name: FUNCTION resend_email_verification_code(email_id integer); Type: COMMENT; Schema: app_public; Owner: -
+-- Name: FUNCTION resend_email_verification_code(email_id uuid); Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON FUNCTION app_public.resend_email_verification_code(email_id integer) IS 'If you didn''t receive the verification code for this email, we can resend it. We silently cap the rate of resends on the backend, so calls to this function may not result in another email being sent if it has been called recently.';
+COMMENT ON FUNCTION app_public.resend_email_verification_code(email_id uuid) IS 'If you didn''t receive the verification code for this email, we can resend it. We silently cap the rate of resends on the backend, so calls to this function may not result in another email being sent if it has been called recently.';
 
 
 --
--- Name: reset_password(integer, text, text); Type: FUNCTION; Schema: app_public; Owner: -
+-- Name: reset_password(uuid, text, text); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.reset_password(user_id integer, reset_token text, new_password text) RETURNS boolean
+CREATE FUNCTION app_public.reset_password(user_id uuid, reset_token text, new_password text) RETURNS boolean
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 declare
-  v_user app_public.users;
+  v_user app_public.user;
   v_user_secret app_private.user_secrets;
   v_token_max_duration interval = interval '3 days';
 begin
-  select users.* into v_user
-  from app_public.users
+  select "user".* into v_user
+  from app_public.user
   where id = user_id;
 
   if not (v_user is null) then
@@ -1070,10 +1133,10 @@ $$;
 
 
 --
--- Name: FUNCTION reset_password(user_id integer, reset_token text, new_password text); Type: COMMENT; Schema: app_public; Owner: -
+-- Name: FUNCTION reset_password(user_id uuid, reset_token text, new_password text); Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON FUNCTION app_public.reset_password(user_id integer, reset_token text, new_password text) IS 'After triggering forgotPassword, you''ll be sent a reset token. Combine this with your user ID and a new password to reset your password.';
+COMMENT ON FUNCTION app_public.reset_password(user_id uuid, reset_token text, new_password text) IS 'After triggering forgotPassword, you''ll be sent a reset token. Combine this with your user ID and a new password to reset your password.';
 
 
 --
@@ -1140,7 +1203,7 @@ COMMENT ON FUNCTION app_public.tg__graphql_subscription() IS 'This function enab
 
 CREATE FUNCTION app_public.tg_user_emails__forbid_if_verified() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    SET search_path TO 'app_public', 'app_private', 'app_hidden', 'public'
     AS $$
 begin
   if exists(select 1 from app_public.user_emails where email = NEW.email and is_verified is true) then
@@ -1156,35 +1219,32 @@ $$;
 --
 
 CREATE FUNCTION app_public.tg_user_emails__verify_account_on_verified() RETURNS trigger
-    LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 begin
-  update app_public.users set is_verified = true where id = new.user_id and is_verified is false;
+  update app_public.user set is_verified = true where id = new.user_id and is_verified is false;
   return new;
 end;
 $$;
 
 
 --
--- Name: users_has_password(app_public.users); Type: FUNCTION; Schema: app_public; Owner: -
+-- Name: user_has_password(app_public."user"); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.users_has_password(u app_public.users) RETURNS boolean
+CREATE FUNCTION app_public.user_has_password(u app_public."user") RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
   select (password_hash is not null) from app_private.user_secrets where user_secrets.user_id = u.id and u.id = app_public.current_user_id();
 $$;
 
 
 --
--- Name: verify_email(integer, text); Type: FUNCTION; Schema: app_public; Owner: -
+-- Name: verify_email(uuid, text); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
-CREATE FUNCTION app_public.verify_email(user_email_id integer, token text) RETURNS boolean
+CREATE FUNCTION app_public.verify_email(user_email_id uuid, token text) RETURNS boolean
     LANGUAGE plpgsql STRICT SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public', 'pg_temp'
     AS $$
 begin
   update app_public.user_emails
@@ -1203,10 +1263,10 @@ $$;
 
 
 --
--- Name: FUNCTION verify_email(user_email_id integer, token text); Type: COMMENT; Schema: app_public; Owner: -
+-- Name: FUNCTION verify_email(user_email_id uuid, token text); Type: COMMENT; Schema: app_public; Owner: -
 --
 
-COMMENT ON FUNCTION app_public.verify_email(user_email_id integer, token text) IS 'Once you have received a verification token for your email, you may call this mutation with that token to make your email verified.';
+COMMENT ON FUNCTION app_public.verify_email(user_email_id uuid, token text) IS 'Once you have received a verification token for your email, you may call this mutation with that token to make your email verified.';
 
 
 --
@@ -1214,7 +1274,7 @@ COMMENT ON FUNCTION app_public.verify_email(user_email_id integer, token text) I
 --
 
 CREATE TABLE app_private.connect_pg_simple_sessions (
-    sid character varying NOT NULL,
+    sid uuid NOT NULL,
     sess json NOT NULL,
     expire timestamp without time zone NOT NULL
 );
@@ -1257,7 +1317,7 @@ COMMENT ON COLUMN app_private.unregistered_email_password_resets.latest_attempt 
 --
 
 CREATE TABLE app_private.user_authentication_secrets (
-    user_authentication_id integer NOT NULL,
+    user_authentication_id uuid NOT NULL,
     details jsonb DEFAULT '{}'::jsonb NOT NULL
 );
 
@@ -1267,7 +1327,7 @@ CREATE TABLE app_private.user_authentication_secrets (
 --
 
 CREATE TABLE app_private.user_email_secrets (
-    user_email_id integer NOT NULL,
+    user_email_id uuid NOT NULL,
     verification_token text,
     verification_email_sent_at timestamp with time zone,
     password_reset_email_sent_at timestamp with time zone
@@ -1278,7 +1338,7 @@ CREATE TABLE app_private.user_email_secrets (
 -- Name: TABLE user_email_secrets; Type: COMMENT; Schema: app_private; Owner: -
 --
 
-COMMENT ON TABLE app_private.user_email_secrets IS 'The contents of this table should never be visible to the user. Contains data mostly related to email verification and avoiding spamming users.';
+COMMENT ON TABLE app_private.user_email_secrets IS 'The contents of this table should never be visible to the user. Contains data mostly related to email verification and avoiding spamming user.';
 
 
 --
@@ -1293,7 +1353,7 @@ COMMENT ON COLUMN app_private.user_email_secrets.password_reset_email_sent_at IS
 --
 
 CREATE TABLE app_private.user_secrets (
-    user_id integer NOT NULL,
+    user_id uuid NOT NULL,
     password_hash text,
     last_login_at timestamp with time zone DEFAULT now() NOT NULL,
     failed_password_attempts integer DEFAULT 0 NOT NULL,
@@ -1315,12 +1375,231 @@ COMMENT ON TABLE app_private.user_secrets IS 'The contents of this table should 
 
 
 --
+-- Name: account_balance; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.account_balance (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    credit_vintage_id uuid,
+    wallet_id uuid,
+    liquid_balance integer,
+    burnt_balance integer
+);
+
+
+--
+-- Name: credit_class; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.credit_class (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    designer_id uuid,
+    methodology_id uuid NOT NULL
+);
+
+
+--
+-- Name: credit_class_issuer; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.credit_class_issuer (
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    credit_class_id uuid NOT NULL,
+    issuer_id uuid NOT NULL
+);
+
+
+--
+-- Name: credit_class_version; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.credit_class_version (
+    id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    name text NOT NULL,
+    version text NOT NULL,
+    date_developed timestamp with time zone NOT NULL,
+    description text,
+    state_machine jsonb NOT NULL,
+    metadata jsonb
+);
+
+
+--
+-- Name: credit_vintage; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.credit_vintage (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    credit_class_id uuid,
+    project_id uuid,
+    issuer_id uuid,
+    units integer,
+    initial_distribution jsonb
+);
+
+
+--
+-- Name: event; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.event (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    project_id uuid NOT NULL,
+    date timestamp with time zone,
+    summary character(160) NOT NULL,
+    description text,
+    from_state app_public.project_state,
+    to_state app_public.project_state
+);
+
+
+--
+-- Name: methodology; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.methodology (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    author_id uuid NOT NULL
+);
+
+
+--
+-- Name: methodology_version; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.methodology_version (
+    id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    name text NOT NULL,
+    version text NOT NULL,
+    date_developed timestamp with time zone NOT NULL,
+    description text,
+    boundary public.geometry NOT NULL,
+    metadata jsonb,
+    files jsonb
+);
+
+
+--
+-- Name: mrv; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.mrv (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    project_id uuid
+);
+
+
+--
+-- Name: organization; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.organization (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    type app_public.party_type DEFAULT 'organization'::app_public.party_type NOT NULL,
+    owner_id uuid NOT NULL,
+    name text NOT NULL,
+    logo text,
+    website text,
+    wallet_id uuid,
+    party_id uuid,
+    CONSTRAINT organization_type_check CHECK ((type = 'organization'::app_public.party_type))
+);
+
+
+--
+-- Name: organization_member; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.organization_member (
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    member_id uuid NOT NULL,
+    organization_id uuid NOT NULL
+);
+
+
+--
+-- Name: party; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.party (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    type app_public.party_type NOT NULL,
+    address public.geometry,
+    short_description character(130),
+    CONSTRAINT party_type_check CHECK ((type = ANY (ARRAY['user'::app_public.party_type, 'organization'::app_public.party_type])))
+);
+
+
+--
+-- Name: project; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.project (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    developer_id uuid,
+    steward_id uuid,
+    land_owner_id uuid,
+    credit_class_id uuid NOT NULL,
+    name text NOT NULL,
+    location public.geometry NOT NULL,
+    application_date timestamp with time zone NOT NULL,
+    start_date timestamp with time zone NOT NULL,
+    end_date timestamp with time zone NOT NULL,
+    summary_description character(160) NOT NULL,
+    long_description text NOT NULL,
+    photos text[] NOT NULL,
+    documents jsonb,
+    area integer NOT NULL,
+    area_unit character(10) NOT NULL,
+    state app_public.project_state NOT NULL,
+    last_event_index integer,
+    impact jsonb,
+    metadata jsonb,
+    registry_id uuid,
+    CONSTRAINT check_project CHECK (((developer_id IS NOT NULL) OR (land_owner_id IS NOT NULL) OR (steward_id IS NOT NULL)))
+);
+
+
+--
+-- Name: registry; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.registry (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    name text NOT NULL
+);
+
+
+--
 -- Name: user_authentications; Type: TABLE; Schema: app_public; Owner: -
 --
 
 CREATE TABLE app_public.user_authentications (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid NOT NULL,
     service text NOT NULL,
     identifier text NOT NULL,
     details jsonb DEFAULT '{}'::jsonb NOT NULL,
@@ -1358,84 +1637,15 @@ COMMENT ON COLUMN app_public.user_authentications.details IS 'Additional profile
 
 
 --
--- Name: user_authentications_id_seq; Type: SEQUENCE; Schema: app_public; Owner: -
+-- Name: wallet; Type: TABLE; Schema: app_public; Owner: -
 --
 
-CREATE SEQUENCE app_public.user_authentications_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: user_authentications_id_seq; Type: SEQUENCE OWNED BY; Schema: app_public; Owner: -
---
-
-ALTER SEQUENCE app_public.user_authentications_id_seq OWNED BY app_public.user_authentications.id;
-
-
---
--- Name: user_emails_id_seq; Type: SEQUENCE; Schema: app_public; Owner: -
---
-
-CREATE SEQUENCE app_public.user_emails_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: user_emails_id_seq; Type: SEQUENCE OWNED BY; Schema: app_public; Owner: -
---
-
-ALTER SEQUENCE app_public.user_emails_id_seq OWNED BY app_public.user_emails.id;
-
-
---
--- Name: users_id_seq; Type: SEQUENCE; Schema: app_public; Owner: -
---
-
-CREATE SEQUENCE app_public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: app_public; Owner: -
---
-
-ALTER SEQUENCE app_public.users_id_seq OWNED BY app_public.users.id;
-
-
---
--- Name: user_authentications id; Type: DEFAULT; Schema: app_public; Owner: -
---
-
-ALTER TABLE ONLY app_public.user_authentications ALTER COLUMN id SET DEFAULT nextval('app_public.user_authentications_id_seq'::regclass);
-
-
---
--- Name: user_emails id; Type: DEFAULT; Schema: app_public; Owner: -
---
-
-ALTER TABLE ONLY app_public.user_emails ALTER COLUMN id SET DEFAULT nextval('app_public.user_emails_id_seq'::regclass);
-
-
---
--- Name: users id; Type: DEFAULT; Schema: app_public; Owner: -
---
-
-ALTER TABLE ONLY app_public.users ALTER COLUMN id SET DEFAULT nextval('app_public.users_id_seq'::regclass);
+CREATE TABLE app_public.wallet (
+    id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
+    addr bytea NOT NULL
+);
 
 
 --
@@ -1487,6 +1697,110 @@ ALTER TABLE ONLY app_private.user_secrets
 
 
 --
+-- Name: account_balance account_balance_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.account_balance
+    ADD CONSTRAINT account_balance_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credit_class credit_class_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class
+    ADD CONSTRAINT credit_class_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: credit_class_version credit_class_version_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class_version
+    ADD CONSTRAINT credit_class_version_pkey PRIMARY KEY (id, created_at);
+
+
+--
+-- Name: credit_vintage credit_vintage_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_vintage
+    ADD CONSTRAINT credit_vintage_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: event event_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.event
+    ADD CONSTRAINT event_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: methodology methodology_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.methodology
+    ADD CONSTRAINT methodology_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: methodology_version methodology_version_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.methodology_version
+    ADD CONSTRAINT methodology_version_pkey PRIMARY KEY (id, created_at);
+
+
+--
+-- Name: mrv mrv_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.mrv
+    ADD CONSTRAINT mrv_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organization organization_party_id_type_key; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization
+    ADD CONSTRAINT organization_party_id_type_key UNIQUE (party_id, type);
+
+
+--
+-- Name: organization organization_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization
+    ADD CONSTRAINT organization_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: party party_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.party
+    ADD CONSTRAINT party_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project project_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: registry registry_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.registry
+    ADD CONSTRAINT registry_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: user_authentications uniq_user_authentications; Type: CONSTRAINT; Schema: app_public; Owner: -
 --
 
@@ -1519,26 +1833,105 @@ ALTER TABLE ONLY app_public.user_emails
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+-- Name: user user_party_id_type_key; Type: CONSTRAINT; Schema: app_public; Owner: -
 --
 
-ALTER TABLE ONLY app_public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: users users_username_key; Type: CONSTRAINT; Schema: app_public; Owner: -
---
-
-ALTER TABLE ONLY app_public.users
-    ADD CONSTRAINT users_username_key UNIQUE (username);
+ALTER TABLE ONLY app_public."user"
+    ADD CONSTRAINT user_party_id_type_key UNIQUE (party_id, type);
 
 
 --
--- Name: sessions_user_id_idx; Type: INDEX; Schema: app_private; Owner: -
+-- Name: user user_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
 --
 
-CREATE INDEX sessions_user_id_idx ON app_private.sessions USING btree (user_id);
+ALTER TABLE ONLY app_public."user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user user_username_key; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public."user"
+    ADD CONSTRAINT user_username_key UNIQUE (username);
+
+
+--
+-- Name: wallet wallet_pkey; Type: CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.wallet
+    ADD CONSTRAINT wallet_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: account_balance_credit_vintage_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX account_balance_credit_vintage_id_idx ON app_public.account_balance USING btree (credit_vintage_id);
+
+
+--
+-- Name: account_balance_wallet_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX account_balance_wallet_id_idx ON app_public.account_balance USING btree (wallet_id);
+
+
+--
+-- Name: credit_class_designer_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_class_designer_id_idx ON app_public.credit_class USING btree (designer_id);
+
+
+--
+-- Name: credit_class_issuer_credit_class_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_class_issuer_credit_class_id_idx ON app_public.credit_class_issuer USING btree (credit_class_id);
+
+
+--
+-- Name: credit_class_issuer_issuer_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_class_issuer_issuer_id_idx ON app_public.credit_class_issuer USING btree (issuer_id);
+
+
+--
+-- Name: credit_class_methodology_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_class_methodology_id_idx ON app_public.credit_class USING btree (methodology_id);
+
+
+--
+-- Name: credit_vintage_credit_class_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_vintage_credit_class_id_idx ON app_public.credit_vintage USING btree (credit_class_id);
+
+
+--
+-- Name: credit_vintage_issuer_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_vintage_issuer_id_idx ON app_public.credit_vintage USING btree (issuer_id);
+
+
+--
+-- Name: credit_vintage_project_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX credit_vintage_project_id_idx ON app_public.credit_vintage USING btree (project_id);
+
+
+--
+-- Name: event_project_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX event_project_id_idx ON app_public.event USING btree (project_id);
 
 
 --
@@ -1546,6 +1939,83 @@ CREATE INDEX sessions_user_id_idx ON app_private.sessions USING btree (user_id);
 --
 
 CREATE INDEX idx_user_emails_primary ON app_public.user_emails USING btree (is_primary, user_id);
+
+
+--
+-- Name: methodology_author_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX methodology_author_id_idx ON app_public.methodology USING btree (author_id);
+
+
+--
+-- Name: mrv_project_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX mrv_project_id_idx ON app_public.mrv USING btree (project_id);
+
+
+--
+-- Name: organization_member_member_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX organization_member_member_id_idx ON app_public.organization_member USING btree (member_id);
+
+
+--
+-- Name: organization_member_organization_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX organization_member_organization_id_idx ON app_public.organization_member USING btree (organization_id);
+
+
+--
+-- Name: organization_owner_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX organization_owner_id_idx ON app_public.organization USING btree (owner_id);
+
+
+--
+-- Name: organization_wallet_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX organization_wallet_id_idx ON app_public.organization USING btree (wallet_id);
+
+
+--
+-- Name: project_credit_class_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX project_credit_class_id_idx ON app_public.project USING btree (credit_class_id);
+
+
+--
+-- Name: project_developer_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX project_developer_id_idx ON app_public.project USING btree (developer_id);
+
+
+--
+-- Name: project_land_owner_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX project_land_owner_id_idx ON app_public.project USING btree (land_owner_id);
+
+
+--
+-- Name: project_registry_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX project_registry_id_idx ON app_public.project USING btree (registry_id);
+
+
+--
+-- Name: project_steward_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX project_steward_id_idx ON app_public.project USING btree (steward_id);
 
 
 --
@@ -1570,6 +2040,20 @@ CREATE INDEX user_authentications_user_id_idx ON app_public.user_authentications
 
 
 --
+-- Name: user_wallet_id_idx; Type: INDEX; Schema: app_public; Owner: -
+--
+
+CREATE INDEX user_wallet_id_idx ON app_public."user" USING btree (wallet_id);
+
+
+--
+-- Name: user _100_timestamps; Type: TRIGGER; Schema: app_public; Owner: -
+--
+
+CREATE TRIGGER _100_timestamps BEFORE INSERT OR UPDATE ON app_public."user" FOR EACH ROW EXECUTE PROCEDURE app_private.tg__timestamps();
+
+
+--
 -- Name: user_authentications _100_timestamps; Type: TRIGGER; Schema: app_public; Owner: -
 --
 
@@ -1584,13 +2068,6 @@ CREATE TRIGGER _100_timestamps BEFORE INSERT OR UPDATE ON app_public.user_emails
 
 
 --
--- Name: users _100_timestamps; Type: TRIGGER; Schema: app_public; Owner: -
---
-
-CREATE TRIGGER _100_timestamps BEFORE INSERT OR UPDATE ON app_public.users FOR EACH ROW EXECUTE PROCEDURE app_private.tg__timestamps();
-
-
---
 -- Name: user_emails _200_forbid_existing_email; Type: TRIGGER; Schema: app_public; Owner: -
 --
 
@@ -1598,17 +2075,17 @@ CREATE TRIGGER _200_forbid_existing_email BEFORE INSERT ON app_public.user_email
 
 
 --
--- Name: users _200_make_first_user_admin; Type: TRIGGER; Schema: app_public; Owner: -
+-- Name: user _500_gql_update; Type: TRIGGER; Schema: app_public; Owner: -
 --
 
-CREATE TRIGGER _200_make_first_user_admin BEFORE INSERT ON app_public.users FOR EACH ROW WHEN ((new.id = 1)) EXECUTE PROCEDURE app_private.tg_users__make_first_user_admin();
+CREATE TRIGGER _500_gql_update AFTER UPDATE ON app_public."user" FOR EACH ROW EXECUTE PROCEDURE app_public.tg__graphql_subscription('userChanged', 'graphql:user:$1', 'id');
 
 
 --
--- Name: users _500_gql_update; Type: TRIGGER; Schema: app_public; Owner: -
+-- Name: user _500_insert_secrets; Type: TRIGGER; Schema: app_public; Owner: -
 --
 
-CREATE TRIGGER _500_gql_update AFTER UPDATE ON app_public.users FOR EACH ROW EXECUTE PROCEDURE app_public.tg__graphql_subscription('userChanged', 'graphql:user:$1', 'id');
+CREATE TRIGGER _500_insert_secrets AFTER INSERT ON app_public."user" FOR EACH ROW EXECUTE PROCEDURE app_private.tg_user_secrets__insert_with_user();
 
 
 --
@@ -1616,13 +2093,6 @@ CREATE TRIGGER _500_gql_update AFTER UPDATE ON app_public.users FOR EACH ROW EXE
 --
 
 CREATE TRIGGER _500_insert_secrets AFTER INSERT ON app_public.user_emails FOR EACH ROW EXECUTE PROCEDURE app_private.tg_user_email_secrets__insert_with_user_email();
-
-
---
--- Name: users _500_insert_secrets; Type: TRIGGER; Schema: app_public; Owner: -
---
-
-CREATE TRIGGER _500_insert_secrets AFTER INSERT ON app_public.users FOR EACH ROW EXECUTE PROCEDURE app_private.tg_user_secrets__insert_with_user();
 
 
 --
@@ -1644,7 +2114,7 @@ CREATE TRIGGER _900_send_verification_email AFTER INSERT ON app_public.user_emai
 --
 
 ALTER TABLE ONLY app_private.sessions
-    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1668,7 +2138,199 @@ ALTER TABLE ONLY app_private.user_email_secrets
 --
 
 ALTER TABLE ONLY app_private.user_secrets
-    ADD CONSTRAINT user_secrets_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT user_secrets_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: account_balance account_balance_credit_vintage_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.account_balance
+    ADD CONSTRAINT account_balance_credit_vintage_id_fkey FOREIGN KEY (credit_vintage_id) REFERENCES app_public.credit_vintage(id);
+
+
+--
+-- Name: account_balance account_balance_wallet_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.account_balance
+    ADD CONSTRAINT account_balance_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES app_public.wallet(id);
+
+
+--
+-- Name: credit_class credit_class_designer_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class
+    ADD CONSTRAINT credit_class_designer_id_fkey FOREIGN KEY (designer_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: credit_class_issuer credit_class_issuer_credit_class_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class_issuer
+    ADD CONSTRAINT credit_class_issuer_credit_class_id_fkey FOREIGN KEY (credit_class_id) REFERENCES app_public.credit_class(id);
+
+
+--
+-- Name: credit_class_issuer credit_class_issuer_issuer_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class_issuer
+    ADD CONSTRAINT credit_class_issuer_issuer_id_fkey FOREIGN KEY (issuer_id) REFERENCES app_public.wallet(id);
+
+
+--
+-- Name: credit_class credit_class_methodology_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class
+    ADD CONSTRAINT credit_class_methodology_id_fkey FOREIGN KEY (methodology_id) REFERENCES app_public.methodology(id);
+
+
+--
+-- Name: credit_class_version credit_class_version_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_class_version
+    ADD CONSTRAINT credit_class_version_id_fkey FOREIGN KEY (id) REFERENCES app_public.credit_class(id);
+
+
+--
+-- Name: credit_vintage credit_vintage_credit_class_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_vintage
+    ADD CONSTRAINT credit_vintage_credit_class_id_fkey FOREIGN KEY (credit_class_id) REFERENCES app_public.credit_class(id);
+
+
+--
+-- Name: credit_vintage credit_vintage_issuer_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_vintage
+    ADD CONSTRAINT credit_vintage_issuer_id_fkey FOREIGN KEY (issuer_id) REFERENCES app_public.wallet(id);
+
+
+--
+-- Name: credit_vintage credit_vintage_project_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.credit_vintage
+    ADD CONSTRAINT credit_vintage_project_id_fkey FOREIGN KEY (project_id) REFERENCES app_public.project(id);
+
+
+--
+-- Name: event event_project_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.event
+    ADD CONSTRAINT event_project_id_fkey FOREIGN KEY (project_id) REFERENCES app_public.project(id);
+
+
+--
+-- Name: methodology methodology_author_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.methodology
+    ADD CONSTRAINT methodology_author_id_fkey FOREIGN KEY (author_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: methodology_version methodology_version_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.methodology_version
+    ADD CONSTRAINT methodology_version_id_fkey FOREIGN KEY (id) REFERENCES app_public.methodology(id);
+
+
+--
+-- Name: mrv mrv_project_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.mrv
+    ADD CONSTRAINT mrv_project_id_fkey FOREIGN KEY (project_id) REFERENCES app_public.project(id);
+
+
+--
+-- Name: organization_member organization_member_member_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization_member
+    ADD CONSTRAINT organization_member_member_id_fkey FOREIGN KEY (member_id) REFERENCES app_public."user"(id);
+
+
+--
+-- Name: organization_member organization_member_organization_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization_member
+    ADD CONSTRAINT organization_member_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES app_public.organization(id);
+
+
+--
+-- Name: organization organization_owner_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization
+    ADD CONSTRAINT organization_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES app_public."user"(id);
+
+
+--
+-- Name: organization organization_party_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization
+    ADD CONSTRAINT organization_party_id_fkey FOREIGN KEY (party_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: organization organization_wallet_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.organization
+    ADD CONSTRAINT organization_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES app_public.wallet(id);
+
+
+--
+-- Name: project project_credit_class_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_credit_class_id_fkey FOREIGN KEY (credit_class_id) REFERENCES app_public.credit_class(id);
+
+
+--
+-- Name: project project_developer_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_developer_id_fkey FOREIGN KEY (developer_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: project project_land_owner_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_land_owner_id_fkey FOREIGN KEY (land_owner_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: project project_registry_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_registry_id_fkey FOREIGN KEY (registry_id) REFERENCES app_public.registry(id);
+
+
+--
+-- Name: project project_steward_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public.project
+    ADD CONSTRAINT project_steward_id_fkey FOREIGN KEY (steward_id) REFERENCES app_public.party(id);
 
 
 --
@@ -1676,7 +2338,7 @@ ALTER TABLE ONLY app_private.user_secrets
 --
 
 ALTER TABLE ONLY app_public.user_authentications
-    ADD CONSTRAINT user_authentications_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT user_authentications_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public."user"(id) ON DELETE CASCADE;
 
 
 --
@@ -1684,7 +2346,23 @@ ALTER TABLE ONLY app_public.user_authentications
 --
 
 ALTER TABLE ONLY app_public.user_emails
-    ADD CONSTRAINT user_emails_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT user_emails_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public."user"(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user user_party_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public."user"
+    ADD CONSTRAINT user_party_id_fkey FOREIGN KEY (party_id) REFERENCES app_public.party(id);
+
+
+--
+-- Name: user user_wallet_id_fkey; Type: FK CONSTRAINT; Schema: app_public; Owner: -
+--
+
+ALTER TABLE ONLY app_public."user"
+    ADD CONSTRAINT user_wallet_id_fkey FOREIGN KEY (wallet_id) REFERENCES app_public.wallet(id);
 
 
 --
@@ -1732,6 +2410,13 @@ CREATE POLICY delete_own ON app_public.user_emails FOR DELETE USING ((user_id = 
 
 
 --
+-- Name: user delete_self; Type: POLICY; Schema: app_public; Owner: -
+--
+
+CREATE POLICY delete_self ON app_public."user" FOR DELETE USING ((id = app_public.current_user_id()));
+
+
+--
 -- Name: user_emails insert_own; Type: POLICY; Schema: app_public; Owner: -
 --
 
@@ -1739,10 +2424,10 @@ CREATE POLICY insert_own ON app_public.user_emails FOR INSERT WITH CHECK ((user_
 
 
 --
--- Name: users select_all; Type: POLICY; Schema: app_public; Owner: -
+-- Name: user select_all; Type: POLICY; Schema: app_public; Owner: -
 --
 
-CREATE POLICY select_all ON app_public.users FOR SELECT USING (true);
+CREATE POLICY select_all ON app_public."user" FOR SELECT USING (true);
 
 
 --
@@ -1760,11 +2445,17 @@ CREATE POLICY select_own ON app_public.user_emails FOR SELECT USING ((user_id = 
 
 
 --
--- Name: users update_self; Type: POLICY; Schema: app_public; Owner: -
+-- Name: user update_self; Type: POLICY; Schema: app_public; Owner: -
 --
 
-CREATE POLICY update_self ON app_public.users FOR UPDATE USING ((id = app_public.current_user_id()));
+CREATE POLICY update_self ON app_public."user" FOR UPDATE USING ((id = app_public.current_user_id()));
 
+
+--
+-- Name: user; Type: ROW SECURITY; Schema: app_public; Owner: -
+--
+
+ALTER TABLE app_public."user" ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: user_authentications; Type: ROW SECURITY; Schema: app_public; Owner: -
@@ -1779,23 +2470,17 @@ ALTER TABLE app_public.user_authentications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_public.user_emails ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: users; Type: ROW SECURITY; Schema: app_public; Owner: -
---
-
-ALTER TABLE app_public.users ENABLE ROW LEVEL SECURITY;
-
---
 -- Name: SCHEMA app_hidden; Type: ACL; Schema: -; Owner: -
 --
 
-GRANT USAGE ON SCHEMA app_hidden TO graphile_starter_visitor;
+GRANT USAGE ON SCHEMA app_hidden TO regen_registry_visitor;
 
 
 --
 -- Name: SCHEMA app_public; Type: ACL; Schema: -; Owner: -
 --
 
-GRANT USAGE ON SCHEMA app_public TO graphile_starter_visitor;
+GRANT USAGE ON SCHEMA app_public TO regen_registry_visitor;
 
 
 --
@@ -1803,8 +2488,8 @@ GRANT USAGE ON SCHEMA app_public TO graphile_starter_visitor;
 --
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO graphile_starter;
-GRANT USAGE ON SCHEMA public TO graphile_starter_visitor;
+GRANT ALL ON SCHEMA public TO regen_registry;
+GRANT USAGE ON SCHEMA public TO regen_registry_visitor;
 
 
 --
@@ -1815,38 +2500,66 @@ REVOKE ALL ON FUNCTION app_private.assert_valid_password(new_password text) FROM
 
 
 --
--- Name: TABLE users; Type: ACL; Schema: app_public; Owner: -
+-- Name: TABLE "user"; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT SELECT ON TABLE app_public.users TO graphile_starter_visitor;
-
-
---
--- Name: COLUMN users.username; Type: ACL; Schema: app_public; Owner: -
---
-
-GRANT UPDATE(username) ON TABLE app_public.users TO graphile_starter_visitor;
+GRANT SELECT ON TABLE app_public."user" TO regen_registry_visitor;
 
 
 --
--- Name: COLUMN users.name; Type: ACL; Schema: app_public; Owner: -
+-- Name: COLUMN "user".username; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT UPDATE(name) ON TABLE app_public.users TO graphile_starter_visitor;
-
-
---
--- Name: COLUMN users.avatar_url; Type: ACL; Schema: app_public; Owner: -
---
-
-GRANT UPDATE(avatar_url) ON TABLE app_public.users TO graphile_starter_visitor;
+GRANT UPDATE(username) ON TABLE app_public."user" TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION link_or_register_user(f_user_id integer, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json); Type: ACL; Schema: app_private; Owner: -
+-- Name: COLUMN "user".first_name; Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_private.link_or_register_user(f_user_id integer, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) FROM PUBLIC;
+GRANT UPDATE(first_name) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN "user".last_name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(last_name) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN "user".avatar_url; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(avatar_url) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN "user".wallet_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(wallet_id) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN "user".party_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(party_id) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN "user".type; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(type) ON TABLE app_public."user" TO regen_registry_visitor;
+
+
+--
+-- Name: FUNCTION link_or_register_user(f_user_id uuid, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json); Type: ACL; Schema: app_private; Owner: -
+--
+
+REVOKE ALL ON FUNCTION app_private.link_or_register_user(f_user_id uuid, f_service character varying, f_identifier character varying, f_profile json, f_auth_details json) FROM PUBLIC;
 
 
 --
@@ -1857,10 +2570,10 @@ REVOKE ALL ON FUNCTION app_private.login(username public.citext, password text) 
 
 
 --
--- Name: FUNCTION really_create_user(username public.citext, email text, email_is_verified boolean, name text, avatar_url text, password text); Type: ACL; Schema: app_private; Owner: -
+-- Name: FUNCTION really_create_user(username public.citext, email text, email_is_verified boolean, first_name text, last_name text, avatar_url text, password text); Type: ACL; Schema: app_private; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, name text, avatar_url text, password text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION app_private.really_create_user(username public.citext, email text, email_is_verified boolean, first_name text, last_name text, avatar_url text, password text) FROM PUBLIC;
 
 
 --
@@ -1885,6 +2598,13 @@ REVOKE ALL ON FUNCTION app_private.tg__timestamps() FROM PUBLIC;
 
 
 --
+-- Name: FUNCTION tg_user__make_first_user_admin(); Type: ACL; Schema: app_private; Owner: -
+--
+
+REVOKE ALL ON FUNCTION app_private.tg_user__make_first_user_admin() FROM PUBLIC;
+
+
+--
 -- Name: FUNCTION tg_user_email_secrets__insert_with_user_email(); Type: ACL; Schema: app_private; Owner: -
 --
 
@@ -1899,18 +2619,11 @@ REVOKE ALL ON FUNCTION app_private.tg_user_secrets__insert_with_user() FROM PUBL
 
 
 --
--- Name: FUNCTION tg_users__make_first_user_admin(); Type: ACL; Schema: app_private; Owner: -
---
-
-REVOKE ALL ON FUNCTION app_private.tg_users__make_first_user_admin() FROM PUBLIC;
-
-
---
 -- Name: FUNCTION change_password(old_password text, new_password text); Type: ACL; Schema: app_public; Owner: -
 --
 
 REVOKE ALL ON FUNCTION app_public.change_password(old_password text, new_password text) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.change_password(old_password text, new_password text) TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.change_password(old_password text, new_password text) TO regen_registry_visitor;
 
 
 --
@@ -1918,7 +2631,7 @@ GRANT ALL ON FUNCTION app_public.change_password(old_password text, new_password
 --
 
 REVOKE ALL ON FUNCTION app_public.confirm_account_deletion(token text) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.confirm_account_deletion(token text) TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.confirm_account_deletion(token text) TO regen_registry_visitor;
 
 
 --
@@ -1926,7 +2639,7 @@ GRANT ALL ON FUNCTION app_public.confirm_account_deletion(token text) TO graphil
 --
 
 REVOKE ALL ON FUNCTION app_public.current_session_id() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.current_session_id() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.current_session_id() TO regen_registry_visitor;
 
 
 --
@@ -1934,7 +2647,7 @@ GRANT ALL ON FUNCTION app_public.current_session_id() TO graphile_starter_visito
 --
 
 REVOKE ALL ON FUNCTION app_public."current_user"() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public."current_user"() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public."current_user"() TO regen_registry_visitor;
 
 
 --
@@ -1942,7 +2655,7 @@ GRANT ALL ON FUNCTION app_public."current_user"() TO graphile_starter_visitor;
 --
 
 REVOKE ALL ON FUNCTION app_public.current_user_id() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.current_user_id() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.current_user_id() TO regen_registry_visitor;
 
 
 --
@@ -1950,7 +2663,7 @@ GRANT ALL ON FUNCTION app_public.current_user_id() TO graphile_starter_visitor;
 --
 
 REVOKE ALL ON FUNCTION app_public.forgot_password(email public.citext) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.forgot_password(email public.citext) TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.forgot_password(email public.citext) TO regen_registry_visitor;
 
 
 --
@@ -1958,29 +2671,29 @@ GRANT ALL ON FUNCTION app_public.forgot_password(email public.citext) TO graphil
 --
 
 REVOKE ALL ON FUNCTION app_public.logout() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.logout() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.logout() TO regen_registry_visitor;
 
 
 --
 -- Name: TABLE user_emails; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT SELECT,DELETE ON TABLE app_public.user_emails TO graphile_starter_visitor;
+GRANT SELECT,DELETE ON TABLE app_public.user_emails TO regen_registry_visitor;
 
 
 --
 -- Name: COLUMN user_emails.email; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT INSERT(email) ON TABLE app_public.user_emails TO graphile_starter_visitor;
+GRANT INSERT(email) ON TABLE app_public.user_emails TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION make_email_primary(email_id integer); Type: ACL; Schema: app_public; Owner: -
+-- Name: FUNCTION make_email_primary(email_id uuid); Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_public.make_email_primary(email_id integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.make_email_primary(email_id integer) TO graphile_starter_visitor;
+REVOKE ALL ON FUNCTION app_public.make_email_primary(email_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION app_public.make_email_primary(email_id uuid) TO regen_registry_visitor;
 
 
 --
@@ -1988,23 +2701,23 @@ GRANT ALL ON FUNCTION app_public.make_email_primary(email_id integer) TO graphil
 --
 
 REVOKE ALL ON FUNCTION app_public.request_account_deletion() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.request_account_deletion() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.request_account_deletion() TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION resend_email_verification_code(email_id integer); Type: ACL; Schema: app_public; Owner: -
+-- Name: FUNCTION resend_email_verification_code(email_id uuid); Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_public.resend_email_verification_code(email_id integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.resend_email_verification_code(email_id integer) TO graphile_starter_visitor;
+REVOKE ALL ON FUNCTION app_public.resend_email_verification_code(email_id uuid) FROM PUBLIC;
+GRANT ALL ON FUNCTION app_public.resend_email_verification_code(email_id uuid) TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION reset_password(user_id integer, reset_token text, new_password text); Type: ACL; Schema: app_public; Owner: -
+-- Name: FUNCTION reset_password(user_id uuid, reset_token text, new_password text); Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_public.reset_password(user_id integer, reset_token text, new_password text) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.reset_password(user_id integer, reset_token text, new_password text) TO graphile_starter_visitor;
+REVOKE ALL ON FUNCTION app_public.reset_password(user_id uuid, reset_token text, new_password text) FROM PUBLIC;
+GRANT ALL ON FUNCTION app_public.reset_password(user_id uuid, reset_token text, new_password text) TO regen_registry_visitor;
 
 
 --
@@ -2012,7 +2725,7 @@ GRANT ALL ON FUNCTION app_public.reset_password(user_id integer, reset_token tex
 --
 
 REVOKE ALL ON FUNCTION app_public.tg__graphql_subscription() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.tg__graphql_subscription() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.tg__graphql_subscription() TO regen_registry_visitor;
 
 
 --
@@ -2020,7 +2733,7 @@ GRANT ALL ON FUNCTION app_public.tg__graphql_subscription() TO graphile_starter_
 --
 
 REVOKE ALL ON FUNCTION app_public.tg_user_emails__forbid_if_verified() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.tg_user_emails__forbid_if_verified() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.tg_user_emails__forbid_if_verified() TO regen_registry_visitor;
 
 
 --
@@ -2028,109 +2741,746 @@ GRANT ALL ON FUNCTION app_public.tg_user_emails__forbid_if_verified() TO graphil
 --
 
 REVOKE ALL ON FUNCTION app_public.tg_user_emails__verify_account_on_verified() FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.tg_user_emails__verify_account_on_verified() TO graphile_starter_visitor;
+GRANT ALL ON FUNCTION app_public.tg_user_emails__verify_account_on_verified() TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION users_has_password(u app_public.users); Type: ACL; Schema: app_public; Owner: -
+-- Name: FUNCTION user_has_password(u app_public."user"); Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_public.users_has_password(u app_public.users) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.users_has_password(u app_public.users) TO graphile_starter_visitor;
+REVOKE ALL ON FUNCTION app_public.user_has_password(u app_public."user") FROM PUBLIC;
+GRANT ALL ON FUNCTION app_public.user_has_password(u app_public."user") TO regen_registry_visitor;
 
 
 --
--- Name: FUNCTION verify_email(user_email_id integer, token text); Type: ACL; Schema: app_public; Owner: -
+-- Name: FUNCTION verify_email(user_email_id uuid, token text); Type: ACL; Schema: app_public; Owner: -
 --
 
-REVOKE ALL ON FUNCTION app_public.verify_email(user_email_id integer, token text) FROM PUBLIC;
-GRANT ALL ON FUNCTION app_public.verify_email(user_email_id integer, token text) TO graphile_starter_visitor;
+REVOKE ALL ON FUNCTION app_public.verify_email(user_email_id uuid, token text) FROM PUBLIC;
+GRANT ALL ON FUNCTION app_public.verify_email(user_email_id uuid, token text) TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE account_balance; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN account_balance.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN account_balance.credit_vintage_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(credit_vintage_id),UPDATE(credit_vintage_id) ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN account_balance.wallet_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(wallet_id),UPDATE(wallet_id) ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN account_balance.liquid_balance; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(liquid_balance),UPDATE(liquid_balance) ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN account_balance.burnt_balance; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(burnt_balance),UPDATE(burnt_balance) ON TABLE app_public.account_balance TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE credit_class; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.credit_class TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.credit_class TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class.designer_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(designer_id),UPDATE(designer_id) ON TABLE app_public.credit_class TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class.methodology_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(methodology_id),UPDATE(methodology_id) ON TABLE app_public.credit_class TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE credit_class_issuer; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.credit_class_issuer TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_issuer.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.credit_class_issuer TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_issuer.credit_class_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(credit_class_id),UPDATE(credit_class_id) ON TABLE app_public.credit_class_issuer TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_issuer.issuer_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(issuer_id),UPDATE(issuer_id) ON TABLE app_public.credit_class_issuer TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE credit_class_version; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.version; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(version),UPDATE(version) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.date_developed; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(date_developed),UPDATE(date_developed) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(description),UPDATE(description) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.state_machine; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(state_machine),UPDATE(state_machine) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_class_version.metadata; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(metadata),UPDATE(metadata) ON TABLE app_public.credit_class_version TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE credit_vintage; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_vintage.credit_class_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(credit_class_id),UPDATE(credit_class_id) ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_vintage.project_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(project_id),UPDATE(project_id) ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_vintage.issuer_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(issuer_id),UPDATE(issuer_id) ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_vintage.units; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(units),UPDATE(units) ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN credit_vintage.initial_distribution; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(initial_distribution),UPDATE(initial_distribution) ON TABLE app_public.credit_vintage TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE event; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.project_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(project_id),UPDATE(project_id) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.date; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(date),UPDATE(date) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.summary; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(summary),UPDATE(summary) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(description),UPDATE(description) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.from_state; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(from_state),UPDATE(from_state) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN event.to_state; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(to_state),UPDATE(to_state) ON TABLE app_public.event TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE methodology; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.methodology TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.methodology TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology.author_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(author_id),UPDATE(author_id) ON TABLE app_public.methodology TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE methodology_version; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.version; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(version),UPDATE(version) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.date_developed; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(date_developed),UPDATE(date_developed) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(description),UPDATE(description) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.boundary; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(boundary),UPDATE(boundary) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.metadata; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(metadata),UPDATE(metadata) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN methodology_version.files; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(files),UPDATE(files) ON TABLE app_public.methodology_version TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE mrv; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.mrv TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN mrv.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.mrv TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN mrv.project_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(project_id),UPDATE(project_id) ON TABLE app_public.mrv TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE organization; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.type; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(type),UPDATE(type) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.owner_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(owner_id),UPDATE(owner_id) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.logo; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(logo),UPDATE(logo) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.website; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(website),UPDATE(website) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization.wallet_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(wallet_id),UPDATE(wallet_id) ON TABLE app_public.organization TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE organization_member; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.organization_member TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization_member.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.organization_member TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization_member.member_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(member_id),UPDATE(member_id) ON TABLE app_public.organization_member TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN organization_member.organization_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(organization_id),UPDATE(organization_id) ON TABLE app_public.organization_member TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE party; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.party TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN party.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.party TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN party.type; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(type),UPDATE(type) ON TABLE app_public.party TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN party.address; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(address),UPDATE(address) ON TABLE app_public.party TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN party.short_description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(short_description),UPDATE(short_description) ON TABLE app_public.party TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE project; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.developer_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(developer_id),UPDATE(developer_id) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.steward_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(steward_id),UPDATE(steward_id) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.land_owner_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(land_owner_id),UPDATE(land_owner_id) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.credit_class_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(credit_class_id),UPDATE(credit_class_id) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.location; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(location),UPDATE(location) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.application_date; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(application_date),UPDATE(application_date) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.start_date; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(start_date),UPDATE(start_date) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.end_date; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(end_date),UPDATE(end_date) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.summary_description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(summary_description),UPDATE(summary_description) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.long_description; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(long_description),UPDATE(long_description) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.photos; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(photos),UPDATE(photos) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.documents; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(documents),UPDATE(documents) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.area; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(area),UPDATE(area) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.area_unit; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(area_unit),UPDATE(area_unit) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.state; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(state),UPDATE(state) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.last_event_index; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(last_event_index),UPDATE(last_event_index) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.impact; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(impact),UPDATE(impact) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.metadata; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(metadata),UPDATE(metadata) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN project.registry_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(registry_id),UPDATE(registry_id) ON TABLE app_public.project TO regen_registry_visitor;
+
+
+--
+-- Name: TABLE registry; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT SELECT,DELETE ON TABLE app_public.registry TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN registry.updated_at; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.registry TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN registry.name; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(name),UPDATE(name) ON TABLE app_public.registry TO regen_registry_visitor;
 
 
 --
 -- Name: TABLE user_authentications; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT SELECT,DELETE ON TABLE app_public.user_authentications TO graphile_starter_visitor;
+GRANT SELECT,DELETE ON TABLE app_public.user_authentications TO regen_registry_visitor;
 
 
 --
--- Name: SEQUENCE user_authentications_id_seq; Type: ACL; Schema: app_public; Owner: -
+-- Name: TABLE wallet; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT SELECT,USAGE ON SEQUENCE app_public.user_authentications_id_seq TO graphile_starter_visitor;
-
-
---
--- Name: SEQUENCE user_emails_id_seq; Type: ACL; Schema: app_public; Owner: -
---
-
-GRANT SELECT,USAGE ON SEQUENCE app_public.user_emails_id_seq TO graphile_starter_visitor;
+GRANT SELECT,DELETE ON TABLE app_public.wallet TO regen_registry_visitor;
 
 
 --
--- Name: SEQUENCE users_id_seq; Type: ACL; Schema: app_public; Owner: -
+-- Name: COLUMN wallet.updated_at; Type: ACL; Schema: app_public; Owner: -
 --
 
-GRANT SELECT,USAGE ON SEQUENCE app_public.users_id_seq TO graphile_starter_visitor;
+GRANT INSERT(updated_at),UPDATE(updated_at) ON TABLE app_public.wallet TO regen_registry_visitor;
+
+
+--
+-- Name: COLUMN wallet.addr; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT INSERT(addr),UPDATE(addr) ON TABLE app_public.wallet TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: app_hidden; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_hidden REVOKE ALL ON SEQUENCES  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_hidden GRANT SELECT,USAGE ON SEQUENCES  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_hidden REVOKE ALL ON SEQUENCES  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_hidden GRANT SELECT,USAGE ON SEQUENCES  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: app_hidden; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_hidden REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_hidden REVOKE ALL ON FUNCTIONS  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_hidden GRANT ALL ON FUNCTIONS  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_hidden REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_hidden REVOKE ALL ON FUNCTIONS  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_hidden GRANT ALL ON FUNCTIONS  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: app_public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_public REVOKE ALL ON SEQUENCES  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_public GRANT SELECT,USAGE ON SEQUENCES  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_public REVOKE ALL ON SEQUENCES  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_public GRANT SELECT,USAGE ON SEQUENCES  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: app_public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_public REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_public REVOKE ALL ON FUNCTIONS  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA app_public GRANT ALL ON FUNCTIONS  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_public REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_public REVOKE ALL ON FUNCTIONS  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA app_public GRANT ALL ON FUNCTIONS  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA public REVOKE ALL ON SEQUENCES  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA public GRANT SELECT,USAGE ON SEQUENCES  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA public REVOKE ALL ON SEQUENCES  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA public GRANT SELECT,USAGE ON SEQUENCES  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA public REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA public REVOKE ALL ON FUNCTIONS  FROM graphile_starter;
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter IN SCHEMA public GRANT ALL ON FUNCTIONS  TO graphile_starter_visitor;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA public REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA public REVOKE ALL ON FUNCTIONS  FROM regen_registry;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry IN SCHEMA public GRANT ALL ON FUNCTIONS  TO regen_registry_visitor;
 
 
 --
 -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: -; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE graphile_starter REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE regen_registry REVOKE ALL ON FUNCTIONS  FROM PUBLIC;
 
 
 --

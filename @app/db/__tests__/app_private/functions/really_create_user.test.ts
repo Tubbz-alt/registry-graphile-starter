@@ -5,7 +5,8 @@ export async function reallyCreateUser(
   client: PoolClient,
   username: string | null,
   email: string | null,
-  name: string | null,
+  firstName: string | null,
+  lastName: string | null,
   avatarUrl: string | null,
   password: string | null,
   emailIsVerified: boolean = false
@@ -18,12 +19,13 @@ export async function reallyCreateUser(
         username => $1,
         email => $2,
         email_is_verified => $3,
-        name => $4,
-        avatar_url => $5,
-        password => $6
+        first_name => $4,
+        last_name => $5,
+        avatar_url => $6,
+        password => $7
       ) new_user
       `,
-    [username, email, emailIsVerified, name, avatarUrl, password]
+    [username, email, emailIsVerified, firstName, lastName, avatarUrl, password]
   );
   return row;
 }
@@ -35,7 +37,8 @@ test("can register user with a password", () =>
       client,
       "testuser",
       "testuser@example.com",
-      "Test One",
+      "Test",
+      "One",
       "http://example.com",
       "SuperSecurePassword1"
     );
@@ -44,12 +47,16 @@ test("can register user with a password", () =>
       Object {
         "avatar_url": "http://example.com",
         "created_at": "[DATE]",
+        "first_name": "Test",
         "id": "[ID]",
         "is_admin": false,
         "is_verified": false,
-        "name": "Test One",
+        "last_name": "One",
+        "party_id": null,
+        "type": "user",
         "updated_at": "[DATE]",
         "username": "testuser",
+        "wallet_id": null,
       }
     `);
   }));
@@ -60,7 +67,8 @@ test("cannot register with a weak password", () =>
       client,
       "testuser",
       "testuser@example.com",
-      "Test One",
+      "Test",
+      "One",
       "http://example.com",
       "WEAK"
     );
@@ -79,6 +87,7 @@ test("can register user with just a username and email", () =>
       "testuser@example.com",
       null,
       null,
+      null,
       null
     );
     expect(user).not.toBeNull();
@@ -86,12 +95,16 @@ test("can register user with just a username and email", () =>
       Object {
         "avatar_url": null,
         "created_at": "[DATE]",
+        "first_name": null,
         "id": "[ID]",
         "is_admin": false,
         "is_verified": false,
-        "name": null,
+        "last_name": null,
+        "party_id": null,
+        "type": "user",
         "updated_at": "[DATE]",
         "username": "testuser",
+        "wallet_id": null,
       }
     `);
   }));
@@ -99,7 +112,7 @@ test("can register user with just a username and email", () =>
 test("cannot register user without email", () =>
   withRootDb(async client => {
     // Normally PassportLoginPlugin will call this SQL function directly.
-    const promise = reallyCreateUser(client, null, null, null, null, null);
+    const promise = reallyCreateUser(client, null, null, null, null, null, null);
     await expect(promise).rejects.toMatchInlineSnapshot(
       `[error: Email is required]`
     );

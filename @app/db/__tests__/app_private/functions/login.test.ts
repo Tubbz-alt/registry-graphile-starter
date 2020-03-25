@@ -23,7 +23,7 @@ const UsErNaMe = "uSeRnAmE";
 const PASSWORD = "!TestPassword!";
 
 async function setupTestUser(client: PoolClient) {
-  return reallyCreateUser(client, USERNAME, EMAIL, null, null, PASSWORD);
+  return reallyCreateUser(client, USERNAME, EMAIL, null, null, null, PASSWORD);
 }
 
 it("can login with username+password", () =>

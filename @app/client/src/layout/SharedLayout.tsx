@@ -133,11 +133,11 @@ function SharedLayout({ title, noPad = false, children }: SharedLayoutProps) {
                   style={{ whiteSpace: "nowrap" }}
                 >
                   <Avatar>
-                    {(data.currentUser.name && data.currentUser.name[0]) || "?"}
+                    {(data.currentUser.firstName && data.currentUser.firstName[0]) || "?"}
                   </Avatar>
                   <Warn okay={data.currentUser.isVerified}>
                     <span style={{ marginLeft: 8, marginRight: 8 }}>
-                      {data.currentUser.name}
+                      {data.currentUser.firstName}
                     </span>
                     <Icon type="down" />
                   </Warn>

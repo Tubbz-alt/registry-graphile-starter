@@ -16,12 +16,12 @@ const task: Task = async (inPayload, { addJob, withPgClient }) => {
   } = await withPgClient(pgClient =>
     pgClient.query(
       `
-        select user_emails.id, email, verification_token, username, name, extract(epoch from now()) - extract(epoch from verification_email_sent_at) as seconds_since_verification_sent
+        select user_emails.id, email, verification_token, username, first_name, last_name, extract(epoch from now()) - extract(epoch from verification_email_sent_at) as seconds_since_verification_sent
         from app_public.user_emails
         inner join app_private.user_email_secrets
         on user_email_secrets.user_email_id = user_emails.id
-        inner join app_public.users
-        on users.id = user_emails.user_id
+        inner join app_public.user
+        on "user".id = user_emails.user_id
         where user_emails.id = $1
         and user_emails.is_verified is false
       `,

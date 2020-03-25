@@ -43,7 +43,8 @@ export default Settings_Profile;
  */
 interface FormValues {
   username: string;
-  name: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface ProfileSettingsFormProps extends FormComponentProps<FormValues> {
@@ -80,7 +81,8 @@ function ProfileSettingsForm({
             id: user.id,
             patch: {
               username: values.username,
-              name: values.name,
+              firstName: values.firstName,
+              lastName: values.lastName,
             },
           },
         });
@@ -114,17 +116,29 @@ function ProfileSettingsForm({
     <div>
       <H3>Edit Profile</H3>
       <Form {...formItemLayout} onSubmit={handleSubmit}>
-        <Form.Item label="Name">
-          {getFieldDecorator("name", {
-            initialValue: user.name,
+        <Form.Item label="First Name">
+          {getFieldDecorator("firstName", {
+            initialValue: user.firstName,
             rules: [
               {
                 required: true,
-                message: "Please enter your name",
+                message: "Please enter your first name",
               },
             ],
           })(<Input />)}
         </Form.Item>
+        <Form.Item label="Last Name">
+          {getFieldDecorator("lastName", {
+            initialValue: user.lastName,
+            rules: [
+              {
+                required: true,
+                message: "Please enter your last name",
+              },
+            ],
+          })(<Input />)}
+        </Form.Item>
+
         <Form.Item label="Username">
           {getFieldDecorator("username", {
             initialValue: user.username,

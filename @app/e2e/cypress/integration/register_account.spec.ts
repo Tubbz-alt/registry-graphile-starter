@@ -36,7 +36,8 @@ context("RegisterAccount", () => {
       cy.visit(Cypress.env("ROOT_URL") + "/register");
 
       // Action
-      cy.getCy("registerpage-input-name").type("Test User");
+      cy.getCy("registerpage-input-first-name").type("Test");
+      cy.getCy("registerpage-input-last-name").type("User");
       cy.getCy("registerpage-input-username").type("testuser");
       cy.getCy("registerpage-input-email").type("test.user@example.com");
       cy.getCy("registerpage-input-password").type("Really Good Password");

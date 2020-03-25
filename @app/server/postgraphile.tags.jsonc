@@ -12,8 +12,8 @@
   "config": {
     "class": {
       // Equivalent to:
-      // COMMENT ON TABLE app_public.users IS E'@omit all\nA user who can log in to the application.';
-      "app_public.users": {
+      // COMMENT ON TABLE app_public.user IS E'@omit all\nA user who can log in to the application.';
+      "app_public.user": {
         "tags": {
           /*
            * By doing `@omit all` we prevent the `allUsers` field from appearing in

@@ -79,7 +79,7 @@ const SubscriptionsPlugin = makeExtendSchemaPlugin(build => {
     `,
     resolvers: {
       UserSubscriptionPayload: {
-        user: recordByIdFromTable(build, sql.fragment`app_public.users`),
+        user: recordByIdFromTable(build, sql.fragment`app_public.user`),
       },
     },
   };

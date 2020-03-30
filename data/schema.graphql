@@ -34,7 +34,7 @@ type AccountBalance {
   creditVintageId: UUID
   id: UUID!
   liquidBalance: Int
-  updatedAt: Datetime
+  updatedAt: Datetime!
 
   """Reads a single `Wallet` that is related to this `AccountBalance`."""
   wallet: Wallet
@@ -889,7 +889,7 @@ type CreditClass {
     """The method to use when ordering `Project`."""
     orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
   ): ProjectsConnection!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -965,7 +965,7 @@ type CreditClassIssuer {
   """Reads a single `Wallet` that is related to this `CreditClassIssuer`."""
   issuer: Wallet
   issuerId: UUID!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -1823,7 +1823,7 @@ type Event {
   projectId: UUID!
   summary: String!
   toState: ProjectState
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -2101,7 +2101,7 @@ type Methodology {
     """The method to use when ordering `MethodologyVersion`."""
     orderBy: [MethodologyVersionsOrderBy!] = [PRIMARY_KEY_ASC]
   ): MethodologyVersionsConnection!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -2224,7 +2224,7 @@ type Mrv {
   """Reads a single `Project` that is related to this `Mrv`."""
   project: Project
   projectId: UUID
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -3355,7 +3355,7 @@ type Party {
   ): ProjectsConnection!
   shortDescription: String
   type: PartyType!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 
   """Reads and enables pagination through a set of `User`."""
   users(
@@ -3543,7 +3543,7 @@ type Project {
   steward: Party
   stewardId: UUID
   summaryDescription: String!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -4226,7 +4226,7 @@ type Registry {
     """The method to use when ordering `Project`."""
     orderBy: [ProjectsOrderBy!] = [PRIMARY_KEY_ASC]
   ): ProjectsConnection!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 }
 
 """
@@ -5537,7 +5537,7 @@ type Wallet {
     """The method to use when ordering `Organization`."""
     orderBy: [OrganizationsOrderBy!] = [PRIMARY_KEY_ASC]
   ): OrganizationsConnection!
-  updatedAt: Datetime
+  updatedAt: Datetime!
 
   """Reads and enables pagination through a set of `User`."""
   users(

@@ -1,10 +1,5 @@
---! Previous: sha1:86096586030c70564884a31cabecc6ee57bb53bc
---! Hash: sha1:704b7c377dc6376dd1437218d4cc5ed8e578cd51
-
-CREATE TYPE app_public.party_type AS ENUM (
-  'user',
-  'organization'
-);
+--! Previous: sha1:2456e6fa5f0a889aada30de1b74526026ccf2ca9
+--! Hash: sha1:7ce3500d6b21b3ad749edda9a178d9cc9453772b
 
 CREATE TYPE app_public.project_state AS ENUM (
   'proposed',
@@ -14,27 +9,10 @@ CREATE TYPE app_public.project_state AS ENUM (
   'ended'
 );
 
-CREATE TABLE app_public.parties (
-  "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
-  "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
-  "type" party_type NOT NULL check("type" in ('user', 'organization')),
-  "address" geometry,
-  "short_description" char(130)
-  -- "stripe_token" text
-);
-
-grant
-  select,
-  insert (updated_at, type, address, short_description),
-  update (updated_at, type, address, short_description),
-  delete
-on app_public.parties to :DATABASE_VISITOR;
-
 CREATE TABLE app_public.wallets (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "addr" bytea NOT NULL
 );
 
@@ -48,7 +26,7 @@ on app_public.wallets to :DATABASE_VISITOR;
 CREATE TABLE app_public.account_balances (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "credit_vintage_id" uuid,
   "wallet_id" uuid,
   "liquid_balance" integer,
@@ -65,7 +43,7 @@ on app_public.account_balances to :DATABASE_VISITOR;
 -- CREATE TABLE app_public.users (
 --   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
 --   "created_at" timestamptz NOT NULL DEFAULT now(),
---   "updated_at" timestamptz,
+--   "updated_at" timestamptz NOT NULL DEFAULT now(),
 --   "type" party_type NOT NULL DEFAULT 'user' check("type" in ('user')),
 --   "email" citext NOT NULL,
 --   "first_name" text NOT NULL,
@@ -84,7 +62,7 @@ on app_public.account_balances to :DATABASE_VISITOR;
 -- CREATE TABLE app_public.organizations (
 --   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
 --   "created_at" timestamptz NOT NULL DEFAULT now(),
---   "updated_at" timestamptz,
+--   "updated_at" timestamptz NOT NULL DEFAULT now(),
 --   "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization')),
 --   "owner_id" uuid NOT NULL,
 --   "name" text NOT NULL,
@@ -95,17 +73,17 @@ on app_public.account_balances to :DATABASE_VISITOR;
 --   UNIQUE ("party_id", "type")
 -- );
 
-ALTER TABLE app_public.users ADD "type" party_type NOT NULL DEFAULT 'user' check("type" in ('user'));
+-- ALTER TABLE app_public.users ADD "type" party_type NOT NULL DEFAULT 'user' check("type" in ('user'));
 ALTER TABLE app_public.users ADD "wallet_id" uuid;
-ALTER TABLE app_public.users ADD "party_id" uuid;
+-- ALTER TABLE app_public.users ADD "party_id" uuid;
 
 grant
-  update (type, wallet_id, party_id)
+  update (type, wallet_id)
 on app_public.users to :DATABASE_VISITOR;
 
 ALTER TABLE app_public.users ADD UNIQUE ("party_id", "type");
 
-ALTER TABLE app_public.organizations ADD "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization'));
+-- ALTER TABLE app_public.organizations ADD "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization'));
 ALTER TABLE app_public.organizations ADD "logo" text;
 ALTER TABLE app_public.organizations ADD "website" text;
 ALTER TABLE app_public.organizations ADD "wallet_id" uuid;
@@ -125,7 +103,7 @@ on app_public.organizations to :DATABASE_VISITOR;
 
 -- CREATE TABLE app_public.organization_member (
 --   "created_at" timestamptz NOT NULL DEFAULT now(),
---   "updated_at" timestamptz,
+--   "updated_at" timestamptz NOT NULL DEFAULT now(),
 --   "member_id" uuid NOT NULL,
 --   "organization_id" uuid NOT NULL
 -- );
@@ -140,7 +118,7 @@ on app_public.organizations to :DATABASE_VISITOR;
 CREATE TABLE app_public.methodologies (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "author_id" uuid NOT NULL
 );
 
@@ -177,7 +155,7 @@ on app_public.methodology_versions to :DATABASE_VISITOR;
 CREATE TABLE app_public.credit_classes (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "designer_id" uuid,
   "methodology_id" uuid NOT NULL
 );
@@ -212,7 +190,7 @@ on app_public.credit_class_versions to :DATABASE_VISITOR;
 
 CREATE TABLE app_public.credit_class_issuers (
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "credit_class_id" uuid NOT NULL,
   "issuer_id" uuid NOT NULL
 );
@@ -244,7 +222,7 @@ on app_public.credit_vintages to :DATABASE_VISITOR;
 CREATE TABLE app_public.projects (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "developer_id" uuid,
   "steward_id" uuid,
   "land_owner_id" uuid,
@@ -281,7 +259,7 @@ on app_public.projects to :DATABASE_VISITOR;
 CREATE TABLE app_public.mrvs (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "project_id" uuid
 );
 
@@ -295,7 +273,7 @@ on app_public.mrvs to :DATABASE_VISITOR;
 CREATE TABLE app_public.registries (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "name" text NOT NULL
 );
 
@@ -309,7 +287,7 @@ on app_public.registries to :DATABASE_VISITOR;
 CREATE TABLE app_public.events (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
   "project_id" uuid NOT NULL,
   "date" timestamptz,
   "summary" char(160) NOT NULL,
@@ -328,8 +306,6 @@ on app_public.events to :DATABASE_VISITOR;
 ALTER TABLE app_public.account_balances ADD FOREIGN KEY ("credit_vintage_id") REFERENCES app_public.credit_vintages ("id");
 
 ALTER TABLE app_public.account_balances ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallets ("id");
-
-ALTER TABLE app_public.users ADD FOREIGN KEY ("party_id") REFERENCES app_public.parties ("id");
 
 --ALTER TABLE app_public.users" ADD FOREIGN KEY ("type") REFERENCES app_public.parties ("type");
 

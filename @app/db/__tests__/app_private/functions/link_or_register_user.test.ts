@@ -55,7 +55,7 @@ describe("when account doesn't already exist", () => {
           "is_admin": false,
           "is_verified": true,
           "name": "GitHub User123456",
-          "party_id": null,
+          "party_id": "[ID]",
           "type": "user",
           "updated_at": "[DATE]",
           "username": "GHU123",

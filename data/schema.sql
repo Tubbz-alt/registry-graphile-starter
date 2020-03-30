@@ -161,11 +161,11 @@ CREATE TABLE app_public.users (
     avatar_url text,
     is_admin boolean DEFAULT false NOT NULL,
     is_verified boolean DEFAULT false NOT NULL,
+    party_id uuid,
+    type app_public.party_type DEFAULT 'user'::app_public.party_type NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    type app_public.party_type DEFAULT 'user'::app_public.party_type NOT NULL,
     wallet_id uuid,
-    party_id uuid,
     CONSTRAINT users_avatar_url_check CHECK ((avatar_url ~ '^https?://[^/]+'::text)),
     CONSTRAINT users_type_check CHECK ((type = 'user'::app_public.party_type)),
     CONSTRAINT users_username_check CHECK (((length((username)::text) >= 2) AND (length((username)::text) <= 24) AND (username OPERATOR(public.~) '^[a-zA-Z]([a-zA-Z0-9][_]?)+$'::public.citext)))
@@ -427,6 +427,7 @@ CREATE FUNCTION app_private.really_create_user(username public.citext, email tex
     AS $$
 declare
   v_user app_public.users;
+  v_party app_public.parties;
   v_username citext = username;
 begin
   if password is not null then
@@ -436,9 +437,13 @@ begin
     raise exception 'Email is required' using errcode = 'MODAT';
   end if;
 
+  -- Insert the new party corresponding to the user
+  insert into app_public.parties (type) values ('user')
+    returning * into v_party;
+
   -- Insert the new user
-  insert into app_public.users (username, name, avatar_url) values
-    (v_username, name, avatar_url)
+  insert into app_public.users (username, name, avatar_url, party_id) values
+    (v_username, name, avatar_url, v_party.id)
     returning * into v_user;
 
 	-- Add the user's email
@@ -859,8 +864,8 @@ CREATE TABLE app_public.organizations (
     id uuid DEFAULT public.gen_random_uuid() NOT NULL,
     slug public.citext NOT NULL,
     name text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
     type app_public.party_type DEFAULT 'organization'::app_public.party_type NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     logo text,
     website text,
     wallet_id uuid,
@@ -1847,7 +1852,7 @@ COMMENT ON TABLE app_private.user_secrets IS 'The contents of this table should 
 CREATE TABLE app_public.account_balances (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     credit_vintage_id uuid,
     wallet_id uuid,
     liquid_balance integer,
@@ -1861,7 +1866,7 @@ CREATE TABLE app_public.account_balances (
 
 CREATE TABLE app_public.credit_class_issuers (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     credit_class_id uuid NOT NULL,
     issuer_id uuid NOT NULL
 );
@@ -1890,7 +1895,7 @@ CREATE TABLE app_public.credit_class_versions (
 CREATE TABLE app_public.credit_classes (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     designer_id uuid,
     methodology_id uuid NOT NULL
 );
@@ -1918,7 +1923,7 @@ CREATE TABLE app_public.credit_vintages (
 CREATE TABLE app_public.events (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     project_id uuid NOT NULL,
     date timestamp with time zone,
     summary character(160) NOT NULL,
@@ -1935,7 +1940,7 @@ CREATE TABLE app_public.events (
 CREATE TABLE app_public.methodologies (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     author_id uuid NOT NULL
 );
 
@@ -1964,7 +1969,7 @@ CREATE TABLE app_public.methodology_versions (
 CREATE TABLE app_public.mrvs (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     project_id uuid
 );
 
@@ -2005,7 +2010,7 @@ CREATE TABLE app_public.organization_memberships (
 CREATE TABLE app_public.parties (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     type app_public.party_type NOT NULL,
     address public.geometry,
     short_description character(130),
@@ -2020,7 +2025,7 @@ CREATE TABLE app_public.parties (
 CREATE TABLE app_public.projects (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     developer_id uuid,
     steward_id uuid,
     land_owner_id uuid,
@@ -2052,7 +2057,7 @@ CREATE TABLE app_public.projects (
 CREATE TABLE app_public.registries (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     name text NOT NULL
 );
 
@@ -2107,7 +2112,7 @@ COMMENT ON COLUMN app_public.user_authentications.details IS 'Additional profile
 CREATE TABLE app_public.wallets (
     id uuid DEFAULT public.uuid_generate_v1() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     addr bytea NOT NULL
 );
 
@@ -3124,6 +3129,13 @@ GRANT UPDATE(avatar_url) ON TABLE app_public.users TO regen_registry_visitor;
 
 
 --
+-- Name: COLUMN users.party_id; Type: ACL; Schema: app_public; Owner: -
+--
+
+GRANT UPDATE(party_id) ON TABLE app_public.users TO regen_registry_visitor;
+
+
+--
 -- Name: COLUMN users.type; Type: ACL; Schema: app_public; Owner: -
 --
 
@@ -3135,13 +3147,6 @@ GRANT UPDATE(type) ON TABLE app_public.users TO regen_registry_visitor;
 --
 
 GRANT UPDATE(wallet_id) ON TABLE app_public.users TO regen_registry_visitor;
-
-
---
--- Name: COLUMN users.party_id; Type: ACL; Schema: app_public; Owner: -
---
-
-GRANT UPDATE(party_id) ON TABLE app_public.users TO regen_registry_visitor;
 
 
 --

@@ -1,5 +1,5 @@
 --! Previous: -
---! Hash: sha1:86096586030c70564884a31cabecc6ee57bb53bc
+--! Hash: sha1:2456e6fa5f0a889aada30de1b74526026ccf2ca9
 
 drop schema if exists app_public cascade;
 
@@ -174,6 +174,30 @@ comment on function app_public.current_user_id() is
 
 /**********/
 
+CREATE TYPE app_public.party_type AS ENUM (
+  'user',
+  'organization'
+);
+
+CREATE TABLE app_public.parties (
+  "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
+  "type" party_type NOT NULL check("type" in ('user', 'organization')),
+  "address" geometry,
+  "short_description" char(130)
+  -- "stripe_token" text
+);
+
+grant
+  select,
+  insert (updated_at, type, address, short_description),
+  update (updated_at, type, address, short_description),
+  delete
+on app_public.parties to :DATABASE_VISITOR;
+
+/**********/
+
 create table app_public.users (
   id uuid primary key default gen_random_uuid(),
   username citext not null unique check(length(username) >= 2 and length(username) <= 24 and username ~ '^[a-zA-Z]([a-zA-Z0-9][_]?)+$'),
@@ -181,6 +205,8 @@ create table app_public.users (
   avatar_url text check(avatar_url ~ '^https?://[^/]+'),
   is_admin boolean not null default false,
   is_verified boolean not null default false,
+  party_id uuid,
+  type app_public.party_type NOT NULL DEFAULT 'user' check("type" in ('user')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -193,7 +219,7 @@ create policy select_all on app_public.users for select using (true);
 create policy update_self on app_public.users for update using (id = app_public.current_user_id());
 grant select on app_public.users to :DATABASE_VISITOR;
 -- NOTE: `insert` is not granted, because we'll handle that separately
-grant update(username, name, avatar_url) on app_public.users to :DATABASE_VISITOR;
+grant update(username, name, avatar_url, party_id) on app_public.users to :DATABASE_VISITOR;
 -- NOTE: `delete` is not granted, because we require confirmation via request_account_deletion/confirm_account_deletion
 
 comment on table app_public.users is
@@ -214,6 +240,8 @@ create trigger _100_timestamps
   before insert or update on app_public.users
   for each row
   execute procedure app_private.tg__timestamps();
+
+ALTER TABLE app_public.users ADD FOREIGN KEY ("party_id") REFERENCES app_public.parties ("id");
 
 /**********/
 
@@ -842,6 +870,7 @@ create function app_private.really_create_user(
 ) returns app_public.users as $$
 declare
   v_user app_public.users;
+  v_party app_public.parties;
   v_username citext = username;
 begin
   if password is not null then
@@ -851,9 +880,13 @@ begin
     raise exception 'Email is required' using errcode = 'MODAT';
   end if;
 
+  -- Insert the new party corresponding to the user
+  insert into app_public.parties (type) values ('user')
+    returning * into v_party;
+
   -- Insert the new user
-  insert into app_public.users (username, name, avatar_url) values
-    (v_username, name, avatar_url)
+  insert into app_public.users (username, name, avatar_url, party_id) values
+    (v_username, name, avatar_url, v_party.id)
     returning * into v_user;
 
 	-- Add the user's email
@@ -1195,6 +1228,7 @@ create table app_public.organizations (
   id uuid primary key default gen_random_uuid(),
   slug citext not null unique,
   name text not null,
+  type app_public.party_type NOT NULL DEFAULT 'organization' check("type" in ('organization')),
   created_at timestamptz not null default now()
 );
 alter table app_public.organizations enable row level security;

@@ -4,63 +4,20 @@ if (parseInt(process.version.split(".")[0], 10) < 10) {
 }
 
 const fsp = require("fs").promises;
-const { spawnSync: rawSpawnSync } = require("child_process");
+const { runSync } = require("./lib/run");
 const dotenv = require("dotenv");
 const inquirer = require("inquirer");
 const pg = require("pg");
 const { withDotenvUpdater, readDotenv } = require("./lib/dotenv");
 const { safeRandomString } = require("./lib/random");
 
-// fixes spawnSync not throwing ENOENT on windows
+// fixes runSync not throwing ENOENT on windows
 const platform = require("os").platform();
+const yarnCmd = platform === "win32" ? "yarn.cmd" : "yarn";
 
 const projectName = process.argv[2];
 
-const yarnCmd = platform === "win32" ? "yarn.cmd" : "yarn";
-
-const spawnSync = (cmd, args, options) => {
-  const result = rawSpawnSync(cmd, args, {
-    stdio: ["pipe", "inherit", "inherit"],
-    env: {
-      ...process.env,
-      YARN_SILENT: "1",
-      npm_config_loglevel: "silent",
-    },
-    ...options,
-  });
-
-  const { error, status, signal, stderr, stdout } = result;
-
-  if (error) {
-    throw error;
-  }
-
-  if (status || signal) {
-    if (stdout) {
-      console.log(stdout.toString("utf8"));
-    }
-    if (stderr) {
-      console.error(stderr.toString("utf8"));
-    }
-    if (status) {
-      throw new Error(
-        `Process exited with status '${status}' (running '${cmd} ${
-          args ? args.join(" ") : ""
-        }')`
-      );
-    } else {
-      throw new Error(
-        `Process exited due to signal '${signal}' (running '${cmd} ${
-          args ? args.join(" ") : null
-        }')`
-      );
-    }
-  }
-
-  return result;
-};
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function updateDotenv(add, answers) {
   add(
@@ -214,14 +171,14 @@ async function main() {
     process.exit(1);
   }
   const config = (await readDotenv()) || {};
-  const mergeAnswers = cb => answers => cb({ ...config, ...answers });
+  const mergeAnswers = (cb) => (answers) => cb({ ...config, ...answers });
   const questions = [
     {
       type: "input",
       name: "DATABASE_NAME",
       message: "What would you like to call your database?",
       default: "graphile_starter",
-      validate: name =>
+      validate: (name) =>
         /^[a-z][a-z0-9_]+$/.test(name)
           ? true
           : "That doesn't look like a good name for a database, try something simpler - just lowercase alphanumeric and underscores",
@@ -240,11 +197,11 @@ async function main() {
       type: "input",
       name: "ROOT_DATABASE_URL",
       message: mergeAnswers(
-        answers =>
+        (answers) =>
           `Please enter a superuser connection string to the database server (so we can drop/create the '${answers.DATABASE_NAME}' and '${answers.DATABASE_NAME}_shadow' databases) - IMPORTANT: it must not be a connection to the '${answers.DATABASE_NAME}' database itself, instead try 'template1'.`
       ),
       default: mergeAnswers(
-        answers =>
+        (answers) =>
           `postgres://${
             answers.DATABASE_HOST === "localhost" ? "" : answers.DATABASE_HOST
           }/template1`
@@ -254,7 +211,7 @@ async function main() {
   ];
   const answers = await inquirer.prompt(questions);
 
-  await withDotenvUpdater(answers, add =>
+  await withDotenvUpdater(answers, (add) =>
     updateDotenv(add, {
       ...config,
       ...answers,
@@ -262,7 +219,7 @@ async function main() {
   );
 
   // And perform setup
-  spawnSync(yarnCmd, ["server", "build"]);
+  runSync(yarnCmd, ["server", "build"]);
 
   // FINALLY we can source our environment
   dotenv.config({ path: `${__dirname}/../.env` });
@@ -304,7 +261,7 @@ async function main() {
     connectionString: ROOT_DATABASE_URL,
   });
 
-  pgPool.on("error", err => {
+  pgPool.on("error", (err) => {
     // Ignore
     console.log(
       "An error occurred whilst trying to talk to the database: " + err.message
@@ -370,8 +327,8 @@ async function main() {
   }
   await pgPool.end();
 
-  spawnSync(yarnCmd, ["db", "reset"]);
-  spawnSync(yarnCmd, ["db", "reset", "--shadow"]);
+  runSync(yarnCmd, ["db", "reset", "--erase"]);
+  runSync(yarnCmd, ["db", "reset", "--shadow", "--erase"]);
 
   console.log();
   console.log();
@@ -399,7 +356,7 @@ async function main() {
   console.log();
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

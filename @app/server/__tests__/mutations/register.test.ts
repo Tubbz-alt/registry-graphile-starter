@@ -1,11 +1,11 @@
+import { asRoot } from "../../../__tests__/helpers";
 import {
+  deleteTestUsers,
+  runGraphQLQuery,
+  sanitize,
   setup,
   teardown,
-  runGraphQLQuery,
-  sanitise,
-  deleteTestUsers,
 } from "../helpers";
-import { asRoot } from "../../../__tests__/helpers";
 
 beforeEach(deleteTestUsers);
 beforeAll(setup);
@@ -14,20 +14,18 @@ afterAll(teardown);
 test("Register", async () => {
   await runGraphQLQuery(
     // GraphQL query goes here:
-    `mutation Register($username: String!, $password: String!, $firstName: String!, $lastName: String!, $email: String!) {
+    `mutation Register($username: String!, $password: String!, $name: String!, $email: String!) {
       register(
         input: {
           username: $username
           password: $password
-          firstName: $firstName
-          lastName: $lastName
+          name: $name
           email: $email
         }
       ) {
         user {
           id
-          firstName
-          lastName
+          name
           avatarUrl
           createdAt
           isAdmin
@@ -43,8 +41,7 @@ test("Register", async () => {
     {
       username: "testuser",
       password: "SECURE_PASSWORD",
-      firstName: "Test",
-      lastName: "User",
+      name: "Test User",
       email: "test.user@example.org",
     },
 
@@ -59,17 +56,16 @@ test("Register", async () => {
       expect(json.data).toBeTruthy();
       expect(json.data!.register).toBeTruthy();
       expect(json.data!.register.user).toBeTruthy();
-      expect(sanitise(json.data!.register.user)).toMatchInlineSnapshot(`
+      expect(sanitize(json.data!.register.user)).toMatchInlineSnapshot(`
         Object {
           "avatarUrl": null,
-          "createdAt": "[timestamp]",
-          "firstName": "Test",
-          "id": "[id]",
+          "createdAt": "[timestamp-1]",
+          "id": "[id-1]",
           "isAdmin": false,
           "isVerified": false,
-          "lastName": "User",
-          "updatedAt": "[timestamp]",
-          "username": "testuser",
+          "name": "Test User",
+          "updatedAt": "[timestamp-1]",
+          "username": "[username-1]",
         }
       `);
       const id = json.data!.register.user.id;
@@ -78,7 +74,7 @@ test("Register", async () => {
       // function - e.g. to check that your mutation made the changes you'd
       // expect.
       const { rows } = await asRoot(pgClient, () =>
-        pgClient.query(`SELECT * FROM app_public.user WHERE id = $1`, [id])
+        pgClient.query(`SELECT * FROM app_public.users WHERE id = $1`, [id])
       );
       if (rows.length !== 1) {
         throw new Error("User not found!");

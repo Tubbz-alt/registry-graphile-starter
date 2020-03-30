@@ -8,9 +8,6 @@ async function main() {
   }
   const pgPool = new pg.Pool({ connectionString });
   try {
-    await pgPool.query(
-      "drop trigger if exists _200_make_first_user_admin on app_public.user;"
-    );
     await pgPool.query("delete from graphile_worker.jobs;");
     await writeFile(
       `${__dirname}/../__tests__/jest.watch.hack.ts`,
@@ -21,7 +18,7 @@ async function main() {
   }
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

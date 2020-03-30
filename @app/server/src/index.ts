@@ -2,7 +2,8 @@
 /* eslint-disable no-console */
 import chalk from "chalk";
 import { createServer } from "http";
-import { makeApp, getShutdownActions } from "./app";
+
+import { getShutdownActions, makeApp } from "./app";
 
 // @ts-ignore
 const packageJson = require("../../../package.json");
@@ -54,7 +55,7 @@ async function main() {
   });
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error("Fatal error occurred starting server!");
   console.error(e);
   process.exit(101);

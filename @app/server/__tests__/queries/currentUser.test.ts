@@ -1,9 +1,9 @@
 import {
+  createUserAndLogIn,
+  deleteTestUsers,
+  runGraphQLQuery,
   setup,
   teardown,
-  runGraphQLQuery,
-  deleteTestUsers,
-  createUserAndLogIn,
 } from "../helpers";
 
 beforeEach(deleteTestUsers);
@@ -24,7 +24,7 @@ test("currentUser when logged out", async () => {
     },
 
     // This function runs all your test assertions:
-    async json => {
+    async (json) => {
       expect(json.errors).toBeFalsy();
       expect(json.data).toBeTruthy();
       expect(json.data!.currentUser).toBe(null);
@@ -47,7 +47,7 @@ test("currentUser when logged in", async () => {
     },
 
     // This function runs all your test assertions:
-    async json => {
+    async (json) => {
       expect(json.errors).toBeFalsy();
       expect(json.data).toBeTruthy();
       expect(json.data!.currentUser).toMatchObject({

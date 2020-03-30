@@ -1,5 +1,6 @@
 import { PoolClient } from "pg";
-import { withRootDb, createUsers, getJobs, clearJobs } from "../../helpers";
+
+import { clearJobs, createUsers, getJobs, withRootDb } from "../../helpers";
 
 export async function forgotPassword(
   client: PoolClient,
@@ -14,7 +15,7 @@ export async function forgotPassword(
 }
 
 it("can trigger user password reset with email, receive email with token", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1, true);
     await forgotPassword(client, user._email!.toLowerCase());
     const jobs = await getJobs(client, "user__forgot_password");
@@ -28,7 +29,7 @@ it("can trigger user password reset with email, receive email with token", () =>
   }));
 
 it("can trigger user password reset with EMAIL, receive email with token", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1, true);
     await forgotPassword(client, user._email!.toUpperCase());
     const jobs = await getJobs(client, "user__forgot_password");
@@ -42,7 +43,7 @@ it("can trigger user password reset with EMAIL, receive email with token", () =>
   }));
 
 it("cannot spam re-send of password reset email", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1, true);
     await forgotPassword(client, user._email!.toUpperCase());
     await clearJobs(client);
@@ -53,7 +54,7 @@ it("cannot spam re-send of password reset email", () =>
   }));
 
 it("can trigger re-send of the password reset email", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1, true);
     await forgotPassword(client, user._email!.toUpperCase());
     await clearJobs(client);

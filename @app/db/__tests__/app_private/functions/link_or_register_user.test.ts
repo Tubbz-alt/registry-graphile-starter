@@ -1,9 +1,10 @@
-import { withRootDb, snapshotSafe } from "../../helpers";
 import { PoolClient } from "pg";
+
+import { snapshotSafe, withRootDb } from "../../helpers";
 
 async function linkOrRegisterUser(
   client: PoolClient,
-  userId: number | null,
+  userId: string | null,
   service: string | null,
   identifier: string | null,
   profile: { [key: string]: any } | null,
@@ -26,7 +27,7 @@ async function linkOrRegisterUser(
 
 describe("when account doesn't already exist", () => {
   it("can login with full oauth details", () =>
-    withRootDb(async client => {
+    withRootDb(async (client) => {
       const user = await linkOrRegisterUser(
         client,
         null,
@@ -34,8 +35,7 @@ describe("when account doesn't already exist", () => {
         "123456",
         {
           email: "github.user.123456@example.com",
-          first_name: "GitHub",
-          last_name: "User123456",
+          name: "GitHub User123456",
           avatar_url: "http://example.com/avatar.jpg",
           username: "GHU123",
         },
@@ -43,31 +43,29 @@ describe("when account doesn't already exist", () => {
       );
       expect(user).toBeTruthy();
       expect(user.username).toEqual("GHU123");
-      expect(user.first_name).toEqual("GitHub");
-      expect(user.last_name).toEqual("User123456");
+      expect(user.name).toEqual("GitHub User123456");
       expect(user.avatar_url).toEqual("http://example.com/avatar.jpg");
       expect(user.is_admin).toEqual(false);
       expect(user.is_verified).toEqual(true);
       expect(snapshotSafe(user)).toMatchInlineSnapshot(`
-      Object {
-        "avatar_url": "http://example.com/avatar.jpg",
-        "created_at": "[DATE]",
-        "first_name": "GitHub",
-        "id": "[ID]",
-        "is_admin": false,
-        "is_verified": true,
-        "last_name": "User123456",
-        "party_id": null,
-        "type": "user",
-        "updated_at": "[DATE]",
-        "username": "GHU123",
-        "wallet_id": null,
-      }
-    `);
+        Object {
+          "avatar_url": "http://example.com/avatar.jpg",
+          "created_at": "[DATE]",
+          "id": "[ID]",
+          "is_admin": false,
+          "is_verified": true,
+          "name": "GitHub User123456",
+          "party_id": null,
+          "type": "user",
+          "updated_at": "[DATE]",
+          "username": "GHU123",
+          "wallet_id": null,
+        }
+      `);
     }));
 
   it("can login with minimal oauth details", () =>
-    withRootDb(async client => {
+    withRootDb(async (client) => {
       const user = await linkOrRegisterUser(
         client,
         null,
@@ -79,17 +77,15 @@ describe("when account doesn't already exist", () => {
         {}
       );
       expect(user).toBeTruthy();
-      // expect(user.username).toMatch(/^user(?:[1-9][0-9]+)?$/);
-      expect(user.username).toEqual("github.user.123456@example.com");
-      expect(user.first_name).toEqual(null);
-      expect(user.last_name).toEqual(null);
+      expect(user.username).toMatch(/^user(?:[1-9][0-9]+)?$/);
+      expect(user.name).toEqual(null);
       expect(user.avatar_url).toEqual(null);
       expect(user.is_admin).toEqual(false);
       expect(user.is_verified).toEqual(true);
     }));
 
   test("cannot register without email", () =>
-    withRootDb(async client => {
+    withRootDb(async (client) => {
       const promise = client.query(
         "SELECT * FROM app_private.link_or_register_user($1, $2, $3, $4, $5)",
         [
@@ -109,7 +105,7 @@ describe("when account doesn't already exist", () => {
     }));
 
   it("cannot register with invalid email", () =>
-    withRootDb(async client => {
+    withRootDb(async (client) => {
       const promise = linkOrRegisterUser(
         client,
         null,
@@ -128,7 +124,7 @@ describe("when account doesn't already exist", () => {
 });
 
 it("login with new oauth sharing email of existing account links accounts", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const sharedEmail = "existing@example.com";
     const existingUser = await linkOrRegisterUser(
       client,
@@ -156,7 +152,7 @@ it("login with new oauth sharing email of existing account links accounts", () =
   }));
 
 it("login with new oauth when logged in links accounts", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const githubUser = await linkOrRegisterUser(
       client,
       null,

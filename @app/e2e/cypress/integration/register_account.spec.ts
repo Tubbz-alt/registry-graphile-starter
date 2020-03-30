@@ -10,7 +10,7 @@ context("RegisterAccount", () => {
     cy.getCy("loginpage-button-register").click();
 
     // Assertions
-    cy.url().should("equal", Cypress.env("ROOT_URL") + "/register");
+    cy.url().should("equal", Cypress.env("ROOT_URL") + "/register?next=%2F");
     cy.getCy("registerpage-name-label").should("exist");
   });
 
@@ -23,7 +23,6 @@ context("RegisterAccount", () => {
 
     // Assertions
     cy.getCy("registerpage-name-label").should("exist");
-    cy.contains("Registration failed");
     cy.contains("input your name");
     cy.contains("input your passphrase");
   });
@@ -36,8 +35,7 @@ context("RegisterAccount", () => {
       cy.visit(Cypress.env("ROOT_URL") + "/register");
 
       // Action
-      cy.getCy("registerpage-input-first-name").type("Test");
-      cy.getCy("registerpage-input-last-name").type("User");
+      cy.getCy("registerpage-input-name").type("Test User");
       cy.getCy("registerpage-input-username").type("testuser");
       cy.getCy("registerpage-input-email").type("test.user@example.com");
       cy.getCy("registerpage-input-password").type("Really Good Password");

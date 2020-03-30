@@ -1,15 +1,16 @@
+import { getTasks, runTaskListOnce, SharedOptions } from "graphile-worker";
 import { mapValues } from "lodash";
 import { PoolClient } from "pg";
-import {
-  TEST_DATABASE_URL,
-  poolFromUrl,
-  deleteTestData,
-  asRoot,
-  User,
-  createUsers,
-  createSession,
-} from "../../__tests__/helpers";
 
+import {
+  asRoot,
+  createSession,
+  createUsers,
+  deleteTestData,
+  poolFromUrl,
+  TEST_DATABASE_URL,
+  User,
+} from "../../__tests__/helpers";
 /*
  * We need to inform jest that these files depend on changes to the database,
  * so we write a dummy file after current.sql is imported. This file has to be
@@ -68,14 +69,14 @@ export const withRootDb = <T>(fn: ClientCallback<T>) =>
 export const withUserDb = <T>(
   fn: (client: PoolClient, user: User) => Promise<T>
 ) =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1);
     await becomeUser(client, user.id);
     await fn(client, user);
   });
 
 export const withAnonymousDb = <T>(fn: (client: PoolClient) => Promise<T>) =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     await becomeUser(client, null);
     await fn(client);
   });
@@ -83,7 +84,7 @@ export const withAnonymousDb = <T>(fn: (client: PoolClient) => Promise<T>) =>
 export const becomeRoot = (client: PoolClient) => client.query("reset role");
 export const becomeUser = async (
   client: PoolClient,
-  userOrUserId: User | number | null
+  userOrUserId: User | string | null
 ) => {
   await becomeRoot(client);
   const session = userOrUserId
@@ -98,11 +99,12 @@ export const becomeUser = async (
   );
 };
 
-export const getSessions = async (client: PoolClient, userId: number) => {
+export const getSessions = async (client: PoolClient, userId: string) => {
   const { rows } = await asRoot(client, () =>
-    client.query(`select * from app_private.sessions where user_id = $1`, [
-      userId,
-    ])
+    client.query(
+      `select * from app_private.sessions where user_id = $1 order by uuid asc`,
+      [userId]
+    )
   );
   return rows;
 };
@@ -181,9 +183,44 @@ export const getJobs = async (
 ) => {
   const { rows } = await asRoot(client, () =>
     client.query(
-      "select * from graphile_worker.jobs where $1::text is null or task_identifier = $1::text",
+      "select * from graphile_worker.jobs where $1::text is null or task_identifier = $1::text order by id asc",
       [taskIdentifier]
     )
   );
   return rows;
 };
+
+/******************************************************************************/
+
+export const runJobs = async (client: PoolClient) => {
+  return asRoot(client, async (client) => {
+    const sharedOptions: SharedOptions = {};
+    const taskList = await getTasks(
+      sharedOptions,
+      `${__dirname}/../../worker/dist/tasks`
+    );
+    await runTaskListOnce(sharedOptions, taskList.tasks, client);
+  });
+};
+
+export const assertJobComplete = async (
+  client: PoolClient,
+  job: { id: string }
+) => {
+  return asRoot(client, async (client) => {
+    const {
+      rows: [row],
+    } = await client.query("select * from graphile_worker.jobs where id = $1", [
+      job.id,
+    ]);
+    expect(row).toBeFalsy();
+  });
+};
+
+export const clearEmails = () => {
+  global["TEST_EMAILS"] = [];
+};
+
+beforeEach(clearEmails);
+
+export const getEmails = () => global["TEST_EMAILS"];

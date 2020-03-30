@@ -4,8 +4,7 @@ subscription CurrentUserUpdated {
     user {
       id
       username
-      firstName
-      lastName
+      name
       avatarUrl
       isAdmin
       isVerified

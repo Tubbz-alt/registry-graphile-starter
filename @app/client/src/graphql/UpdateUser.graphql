@@ -3,8 +3,7 @@ mutation UpdateUser($id: UUID!, $patch: UserPatch!) {
     clientMutationId
     user {
       id
-      firstName
-      lastName
+      name
       username
     }
   }

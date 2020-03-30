@@ -1,12 +1,12 @@
-import { withRootDb, snapshotSafe } from "../../helpers";
 import { PoolClient } from "pg";
+
+import { snapshotSafe, withRootDb } from "../../helpers";
 
 export async function reallyCreateUser(
   client: PoolClient,
   username: string | null,
   email: string | null,
-  firstName: string | null,
-  lastName: string | null,
+  name: string | null,
   avatarUrl: string | null,
   password: string | null,
   emailIsVerified: boolean = false
@@ -19,26 +19,24 @@ export async function reallyCreateUser(
         username => $1,
         email => $2,
         email_is_verified => $3,
-        first_name => $4,
-        last_name => $5,
-        avatar_url => $6,
-        password => $7
+        name => $4,
+        avatar_url => $5,
+        password => $6
       ) new_user
       `,
-    [username, email, emailIsVerified, firstName, lastName, avatarUrl, password]
+    [username, email, emailIsVerified, name, avatarUrl, password]
   );
   return row;
 }
 
 test("can register user with a password", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     // Normally PassportLoginPlugin will call this SQL function directly.
     const user = await reallyCreateUser(
       client,
       "testuser",
       "testuser@example.com",
-      "Test",
-      "One",
+      "Test One",
       "http://example.com",
       "SuperSecurePassword1"
     );
@@ -47,11 +45,10 @@ test("can register user with a password", () =>
       Object {
         "avatar_url": "http://example.com",
         "created_at": "[DATE]",
-        "first_name": "Test",
         "id": "[ID]",
         "is_admin": false,
         "is_verified": false,
-        "last_name": "One",
+        "name": "Test One",
         "party_id": null,
         "type": "user",
         "updated_at": "[DATE]",
@@ -62,13 +59,12 @@ test("can register user with a password", () =>
   }));
 
 test("cannot register with a weak password", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const promise = reallyCreateUser(
       client,
       "testuser",
       "testuser@example.com",
-      "Test",
-      "One",
+      "Test One",
       "http://example.com",
       "WEAK"
     );
@@ -79,13 +75,12 @@ test("cannot register with a weak password", () =>
   }));
 
 test("can register user with just a username and email", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     // Normally PassportLoginPlugin will call this SQL function directly.
     const user = await reallyCreateUser(
       client,
       "testuser",
       "testuser@example.com",
-      null,
       null,
       null,
       null
@@ -95,11 +90,10 @@ test("can register user with just a username and email", () =>
       Object {
         "avatar_url": null,
         "created_at": "[DATE]",
-        "first_name": null,
         "id": "[ID]",
         "is_admin": false,
         "is_verified": false,
-        "last_name": null,
+        "name": null,
         "party_id": null,
         "type": "user",
         "updated_at": "[DATE]",
@@ -110,9 +104,9 @@ test("can register user with just a username and email", () =>
   }));
 
 test("cannot register user without email", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     // Normally PassportLoginPlugin will call this SQL function directly.
-    const promise = reallyCreateUser(client, null, null, null, null, null, null);
+    const promise = reallyCreateUser(client, null, null, null, null, null);
     await expect(promise).rejects.toMatchInlineSnapshot(
       `[error: Email is required]`
     );

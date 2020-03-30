@@ -1,12 +1,13 @@
-import {
-  withUserDb,
-  snapshotSafe,
-  asRoot,
-  withRootDb,
-  createUsers,
-  becomeUser,
-} from "../../helpers";
 import { PoolClient } from "pg";
+
+import {
+  asRoot,
+  becomeUser,
+  createUsers,
+  snapshotSafe,
+  withRootDb,
+  withUserDb,
+} from "../../helpers";
 
 async function addEmail(client: PoolClient, email: string) {
   const {
@@ -37,7 +38,7 @@ it("can add an email (unverified), receive code, verify email (and marks account
   }));
 
 it("cannot manually create a verified email", () =>
-  withUserDb(async client => {
+  withUserDb(async (client) => {
     const promise = client.query(
       `insert into app_public.user_emails (email, is_verified) values ($1, true) returning *`,
       ["newemail@example.com"]
@@ -48,7 +49,7 @@ it("cannot manually create a verified email", () =>
   }));
 
 it("cannot manually mark an email as verified", () =>
-  withUserDb(async client => {
+  withUserDb(async (client) => {
     const email = await addEmail(client, "newemail@example.com");
     const promise = client.query(
       "update app_public.user_emails set is_verified = true where id = $1",
@@ -60,7 +61,7 @@ it("cannot manually mark an email as verified", () =>
   }));
 
 it("can promote a verified email to primary over another verified email", () =>
-  withUserDb(async client => {
+  withUserDb(async (client) => {
     const email = await addEmail(client, "newemail@example.com");
     expect(email.is_verified).toBe(false);
     expect(email.is_primary).toBe(false);
@@ -82,7 +83,7 @@ it("can promote a verified email to primary over another verified email", () =>
   }));
 
 it("can promote a verified email to primary over an unverified email", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user] = await createUsers(client, 1, false);
     await becomeUser(client, user);
     const email = await addEmail(client, "newemail@example.com");
@@ -105,7 +106,7 @@ it("can promote a verified email to primary over an unverified email", () =>
   }));
 
 it("cannot promote a non-verified email to primary", () =>
-  withUserDb(async client => {
+  withUserDb(async (client) => {
     const email = await addEmail(client, "newemail@example.com");
     expect(email.is_verified).toBe(false);
     expect(email.is_primary).toBe(false);
@@ -116,32 +117,32 @@ it("cannot promote a non-verified email to primary", () =>
     await expect(promise).rejects.toThrowErrorMatchingInlineSnapshot(
       `"You may not make an unverified email primary"`
     );
-    await expect(promise).rejects.toMatchObject({ code: "VRIFY" });
+    await expect(promise).rejects.toMatchObject({ code: "VRFY1" });
   }));
 
 it("cannot see other user's emails (verified or otherwise)", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     const [user, user2] = await createUsers(client, 2, true);
     await becomeUser(client, user);
     // Block-scoped variables FTW
     {
       const { rows } = await client.query(
-        "select * from app_public.user_emails"
+        "select * from app_public.user_emails order by id asc"
       );
       const userIds = rows
-        .map(row => row.user_id)
-        .filter(uid => uid !== user.id);
+        .map((row) => row.user_id)
+        .filter((uid) => uid !== user.id);
       expect(userIds).toHaveLength(0);
     }
 
     // And just to check that our test is valid
     await asRoot(client, async () => {
       const { rows } = await client.query(
-        "select * from app_public.user_emails"
+        "select * from app_public.user_emails order by id asc"
       );
       const userIds = rows
-        .map(row => row.user_id)
-        .filter(uid => uid !== user.id);
+        .map((row) => row.user_id)
+        .filter((uid) => uid !== user.id);
       expect(userIds.length).toBeGreaterThan(0);
       expect(userIds[0]).toBe(user2.id);
     });

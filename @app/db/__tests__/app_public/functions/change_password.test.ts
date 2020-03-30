@@ -1,5 +1,6 @@
-import { withUserDb, asRoot, withRootDb, becomeUser } from "../../helpers";
 import { PoolClient } from "pg";
+
+import { asRoot, becomeUser, withRootDb, withUserDb } from "../../helpers";
 
 async function changePassword(
   client: PoolClient,
@@ -30,8 +31,8 @@ it("can change password", () =>
     // Assertions
     const { rows: secrets } = await asRoot(client, () =>
       client.query(
-        "select * from app_private.user_secrets where password_hash = crypt($1, password_hash)",
-        [newPassword]
+        "select * from app_private.user_secrets where user_id = $1 and password_hash = crypt($2, password_hash)",
+        [user.id, newPassword]
       )
     );
 
@@ -41,7 +42,7 @@ it("can change password", () =>
   }));
 
 it("cannot change password if password is wrong (CREDS)", () =>
-  withUserDb(async client => {
+  withUserDb(async (client) => {
     const newPassword = "SECURE_PASSWORD_1!";
 
     // Action
@@ -70,7 +71,7 @@ it("cannot set a 'weak' password (WEAKP)", () =>
   }));
 
 it("gives error if not logged in (LOGIN)", () =>
-  withRootDb(async client => {
+  withRootDb(async (client) => {
     // Setup
     await becomeUser(client, null);
     const newPassword = "SECURE_PASSWORD_1!";

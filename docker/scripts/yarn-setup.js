@@ -1,8 +1,9 @@
-const { spawnSync: baseSpawnSync } = require("child_process");
+const { runSync } = require("../../scripts/lib/run");
 const { basename, dirname, resolve } = require("path");
 const platform = require("os").platform();
 const { safeRandomString } = require("../../scripts/lib/random");
-const fsp = require("fs").promises;
+const fs = require("fs");
+const fsp = fs.promises;
 
 const DOCKER_DOTENV_PATH = `${__dirname}/../.env`;
 
@@ -11,20 +12,6 @@ if (platform !== "win32" && !process.env.UID) {
     "You should run `export UID` before running 'yarn docker setup' otherwise you may end up with permissions issues."
   );
   process.exit(1);
-}
-
-function spawnSync(command, args, options = {}) {
-  const result = baseSpawnSync(command, args, {
-    stdio: "inherit",
-    windowsHide: true,
-    ...options,
-  });
-  if (result.status) {
-    process.exit(result.status);
-  }
-  if (result.signal) {
-    process.exit(1);
-  }
 }
 
 async function main() {
@@ -57,7 +44,7 @@ POSTGRES_PASSWORD=${password}
 # We're accessing Postgres via Docker, so we must use the db host and the
 # relevant password.
 DATABASE_HOST=db
-ROOT_DATABASE_URL=postgres://postgres:${password}@db/template1
+ROOT_DATABASE_URL=postgres://postgres:${password}@db/postgres
 `;
     await fsp.writeFile(DOCKER_DOTENV_PATH, data);
   }
@@ -71,11 +58,11 @@ ROOT_DATABASE_URL=postgres://postgres:${password}@db/template1
   // On Windows we must run 'yarn.cmd' rather than 'yarn'
   const yarnCmd = platform === "win32" ? "yarn.cmd" : "yarn";
 
-  spawnSync(yarnCmd, ["down"]);
-  spawnSync(yarnCmd, ["db:up"]);
+  runSync(yarnCmd, ["down"]);
+  runSync(yarnCmd, ["db:up"]);
 
   // Fix permissions
-  spawnSync(yarnCmd, [
+  runSync(yarnCmd, [
     "compose",
     "run",
     "server",
@@ -86,17 +73,10 @@ ROOT_DATABASE_URL=postgres://postgres:${password}@db/template1
   ]);
 
   // Run setup as normal
-  spawnSync(yarnCmd, [
-    "compose",
-    "run",
-    "server",
-    "yarn",
-    "setup",
-    projectName,
-  ]);
+  runSync(yarnCmd, ["compose", "run", "server", "yarn", "setup", projectName]);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

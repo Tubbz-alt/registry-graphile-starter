@@ -1,15 +1,15 @@
 import {
   ApolloLink,
-  Operation,
-  NextLink,
   FetchResult,
+  NextLink,
   Observable,
+  Operation,
 } from "apollo-link";
-import { HttpRequestHandler } from "postgraphile";
-import { execute, getOperationAST } from "graphql";
 import { Request, Response } from "express";
+import { execute, getOperationAST } from "graphql";
+import { HttpRequestHandler } from "postgraphile";
 
-interface GraphileLinkInterface {
+export interface GraphileApolloLinkInterface {
   /** The request object. */
   req: Request;
 
@@ -27,8 +27,8 @@ interface GraphileLinkInterface {
  * A Graphile Apollo link for use during SSR. Allows Apollo Client to resolve
  * server-side requests without requiring an HTTP roundtrip.
  */
-export default class GraphileLink extends ApolloLink {
-  constructor(private options: GraphileLinkInterface) {
+export class GraphileApolloLink extends ApolloLink {
+  constructor(private options: GraphileApolloLinkInterface) {
     super();
   }
 
@@ -37,7 +37,7 @@ export default class GraphileLink extends ApolloLink {
     _forward?: NextLink
   ): Observable<FetchResult> | null {
     const { postgraphileMiddleware, req, res, rootValue } = this.options;
-    return new Observable(observer => {
+    return new Observable((observer) => {
       (async () => {
         try {
           const op = getOperationAST(operation.query, operation.operationName);
@@ -53,7 +53,7 @@ export default class GraphileLink extends ApolloLink {
             req,
             res,
             {},
-            context =>
+            (context) =>
               execute(
                 schema,
                 operation.query,

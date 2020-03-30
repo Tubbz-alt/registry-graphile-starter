@@ -1,5 +1,5 @@
---! Previous: sha1:56f99a18c9e4d9e3193e8c7ecc1e427751da9e78
---! Hash: sha1:7e5aa288474566a2fd7497bf5b52d05b49ce700f
+--! Previous: sha1:86096586030c70564884a31cabecc6ee57bb53bc
+--! Hash: sha1:704b7c377dc6376dd1437218d4cc5ed8e578cd51
 
 CREATE TYPE app_public.party_type AS ENUM (
   'user',
@@ -14,7 +14,7 @@ CREATE TYPE app_public.project_state AS ENUM (
   'ended'
 );
 
-CREATE TABLE app_public.party (
+CREATE TABLE app_public.parties (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -29,9 +29,9 @@ grant
   insert (updated_at, type, address, short_description),
   update (updated_at, type, address, short_description),
   delete
-on app_public.party to :DATABASE_VISITOR;
+on app_public.parties to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.wallet (
+CREATE TABLE app_public.wallets (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -43,9 +43,9 @@ grant
   insert (updated_at, addr),
   update (updated_at, addr),
   delete
-on app_public.wallet to :DATABASE_VISITOR;
+on app_public.wallets to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.account_balance (
+CREATE TABLE app_public.account_balances (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -60,9 +60,9 @@ grant
   insert (updated_at, credit_vintage_id, wallet_id, liquid_balance, burnt_balance),
   update (updated_at, credit_vintage_id, wallet_id, liquid_balance, burnt_balance),
   delete
-on app_public.account_balance to :DATABASE_VISITOR;
+on app_public.account_balances to :DATABASE_VISITOR;
 
--- CREATE TABLE app_public.user (
+-- CREATE TABLE app_public.users (
 --   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
 --   "created_at" timestamptz NOT NULL DEFAULT now(),
 --   "updated_at" timestamptz,
@@ -79,52 +79,65 @@ on app_public.account_balance to :DATABASE_VISITOR;
 --   insert (updated_at, type, email, first_name, last_name, avatar, wallet_id),
 --   update (updated_at, type, email, first_name, last_name, avatar, wallet_id),
 --   delete
--- on app_public.user to :DATABASE_VISITOR;
+-- on app_public.users to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.organization (
-  "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
-  "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
-  "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization')),
-  "owner_id" uuid NOT NULL,
-  "name" text NOT NULL,
-  "logo" text,
-  "website" text,
-  "wallet_id" uuid, --NOT NULL
-  "party_id" uuid, --NOT NULL
-  UNIQUE ("party_id", "type")
-);
+-- CREATE TABLE app_public.organizations (
+--   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
+--   "created_at" timestamptz NOT NULL DEFAULT now(),
+--   "updated_at" timestamptz,
+--   "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization')),
+--   "owner_id" uuid NOT NULL,
+--   "name" text NOT NULL,
+--   "logo" text,
+--   "website" text,
+--   "wallet_id" uuid, --NOT NULL
+--   "party_id" uuid, --NOT NULL
+--   UNIQUE ("party_id", "type")
+-- );
 
-ALTER TABLE app_public.user ADD "type" party_type NOT NULL DEFAULT 'user' check("type" in ('user'));
-
-grant
-  update (type)
-on app_public.user to :DATABASE_VISITOR;
-
-ALTER TABLE app_public.user ADD UNIQUE ("party_id", "type");
+ALTER TABLE app_public.users ADD "type" party_type NOT NULL DEFAULT 'user' check("type" in ('user'));
+ALTER TABLE app_public.users ADD "wallet_id" uuid;
+ALTER TABLE app_public.users ADD "party_id" uuid;
 
 grant
-  select,
-  insert (updated_at, type, owner_id, name, logo, website, wallet_id),
-  update (updated_at, type, owner_id, name, logo, website, wallet_id),
-  delete
-on app_public.organization to :DATABASE_VISITOR;
+  update (type, wallet_id, party_id)
+on app_public.users to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.organization_member (
-  "created_at" timestamptz NOT NULL DEFAULT now(),
-  "updated_at" timestamptz,
-  "member_id" uuid NOT NULL,
-  "organization_id" uuid NOT NULL
-);
+ALTER TABLE app_public.users ADD UNIQUE ("party_id", "type");
+
+ALTER TABLE app_public.organizations ADD "type" party_type NOT NULL DEFAULT 'organization' check("type" in ('organization'));
+ALTER TABLE app_public.organizations ADD "logo" text;
+ALTER TABLE app_public.organizations ADD "website" text;
+ALTER TABLE app_public.organizations ADD "wallet_id" uuid;
+ALTER TABLE app_public.organizations ADD "party_id" uuid;
+ALTER TABLE app_public.organizations ADD UNIQUE ("party_id", "type");
 
 grant
-  select,
-  insert (updated_at, member_id, organization_id),
-  update (updated_at, member_id, organization_id),
-  delete
-on app_public.organization_member to :DATABASE_VISITOR;
+  update (type, logo, website, wallet_id, party_id)
+on app_public.organizations to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.methodology (
+-- grant
+--   select,
+--   insert (updated_at, type, owner_id, name, logo, website, wallet_id),
+--   update (updated_at, type, owner_id, name, logo, website, wallet_id),
+--   delete
+-- on app_public.organizations to :DATABASE_VISITOR;
+
+-- CREATE TABLE app_public.organization_member (
+--   "created_at" timestamptz NOT NULL DEFAULT now(),
+--   "updated_at" timestamptz,
+--   "member_id" uuid NOT NULL,
+--   "organization_id" uuid NOT NULL
+-- );
+--
+-- grant
+--   select,
+--   insert (updated_at, member_id, organization_id),
+--   update (updated_at, member_id, organization_id),
+--   delete
+-- on app_public.organization_member to :DATABASE_VISITOR;
+
+CREATE TABLE app_public.methodologies (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -136,9 +149,9 @@ grant
   insert (updated_at, author_id),
   update (updated_at, author_id),
   delete
-on app_public.methodology to :DATABASE_VISITOR;
+on app_public.methodologies to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.methodology_version (
+CREATE TABLE app_public.methodology_versions (
   "id" uuid,
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "name" text NOT NULL,
@@ -159,9 +172,9 @@ grant
   insert (name, version, date_developed, description, boundary, metadata, files),
   update (name, version, date_developed, description, boundary, metadata, files),
   delete
-on app_public.methodology_version to :DATABASE_VISITOR;
+on app_public.methodology_versions to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.credit_class (
+CREATE TABLE app_public.credit_classes (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -174,9 +187,9 @@ grant
   insert (updated_at, designer_id, methodology_id),
   update (updated_at, designer_id, methodology_id),
   delete
-on app_public.credit_class to :DATABASE_VISITOR;
+on app_public.credit_classes to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.credit_class_version (
+CREATE TABLE app_public.credit_class_versions (
   "id" uuid,
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "name" text NOT NULL,
@@ -195,9 +208,9 @@ grant
   insert (name, version, date_developed, description, state_machine, metadata),
   update (name, version, date_developed, description, state_machine, metadata),
   delete
-on app_public.credit_class_version to :DATABASE_VISITOR;
+on app_public.credit_class_versions to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.credit_class_issuer (
+CREATE TABLE app_public.credit_class_issuers (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
   "credit_class_id" uuid NOT NULL,
@@ -209,9 +222,9 @@ grant
   insert (updated_at, credit_class_id, issuer_id),
   update (updated_at, credit_class_id, issuer_id),
   delete
-on app_public.credit_class_issuer to :DATABASE_VISITOR;
+on app_public.credit_class_issuers to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.credit_vintage (
+CREATE TABLE app_public.credit_vintages (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "credit_class_id" uuid,
@@ -226,9 +239,9 @@ grant
   insert (credit_class_id, project_id, issuer_id, units, initial_distribution),
   update (credit_class_id, project_id, issuer_id, units, initial_distribution),
   delete
-on app_public.credit_vintage to :DATABASE_VISITOR;
+on app_public.credit_vintages to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.project (
+CREATE TABLE app_public.projects (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -263,9 +276,9 @@ grant
   insert (updated_at, developer_id, steward_id, land_owner_id, credit_class_id, name, location, application_date, start_date, end_date, summary_description, long_description, photos, documents, area, area_unit, state, last_event_index, impact, metadata, registry_id),
   update (updated_at, developer_id, steward_id, land_owner_id, credit_class_id, name, location, application_date, start_date, end_date, summary_description, long_description, photos, documents, area, area_unit, state, last_event_index, impact, metadata, registry_id),
   delete
-on app_public.project to :DATABASE_VISITOR;
+on app_public.projects to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.mrv (
+CREATE TABLE app_public.mrvs (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -277,9 +290,9 @@ grant
   insert (updated_at, project_id),
   update (updated_at, project_id),
   delete
-on app_public.mrv to :DATABASE_VISITOR;
+on app_public.mrvs to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.registry (
+CREATE TABLE app_public.registries (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -291,9 +304,9 @@ grant
   insert (updated_at, name),
   update (updated_at, name),
   delete
-on app_public.registry to :DATABASE_VISITOR;
+on app_public.registries to :DATABASE_VISITOR;
 
-CREATE TABLE app_public.event (
+CREATE TABLE app_public.events (
   "id" uuid PRIMARY KEY DEFAULT uuid_generate_v1(),
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz,
@@ -310,95 +323,92 @@ grant
   insert (updated_at, project_id, "date", summary, description, from_state, to_state),
   update (updated_at, project_id, "date", summary, description, from_state, to_state),
   delete
-on app_public.event to :DATABASE_VISITOR;
+on app_public.events to :DATABASE_VISITOR;
 
-ALTER TABLE app_public.account_balance ADD FOREIGN KEY ("credit_vintage_id") REFERENCES app_public.credit_vintage ("id");
+ALTER TABLE app_public.account_balances ADD FOREIGN KEY ("credit_vintage_id") REFERENCES app_public.credit_vintages ("id");
 
-ALTER TABLE app_public.account_balance ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallet ("id");
+ALTER TABLE app_public.account_balances ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallets ("id");
 
-ALTER TABLE app_public.user ADD FOREIGN KEY ("party_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.users ADD FOREIGN KEY ("party_id") REFERENCES app_public.parties ("id");
 
---ALTER TABLE app_public.user" ADD FOREIGN KEY ("type") REFERENCES app_public.party ("type");
+--ALTER TABLE app_public.users" ADD FOREIGN KEY ("type") REFERENCES app_public.parties ("type");
 
-ALTER TABLE app_public.user ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallet ("id");
+ALTER TABLE app_public.users ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallets ("id");
 
-ALTER TABLE app_public.organization ADD FOREIGN KEY ("party_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.organizations ADD FOREIGN KEY ("party_id") REFERENCES app_public.parties ("id");
 
---ALTER TABLE app_public.organization" ADD FOREIGN KEY ("type") REFERENCES app_public.party ("type");
+--ALTER TABLE app_public.organizations" ADD FOREIGN KEY ("type") REFERENCES app_public.parties ("type");
 
-ALTER TABLE app_public.organization ADD FOREIGN KEY ("owner_id") REFERENCES app_public.user ("id");
+-- ALTER TABLE app_public.organizations ADD FOREIGN KEY ("owner_id") REFERENCES app_public.users ("id");
 
-ALTER TABLE app_public.organization ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallet ("id");
+ALTER TABLE app_public.organizations ADD FOREIGN KEY ("wallet_id") REFERENCES app_public.wallets ("id");
 
-ALTER TABLE app_public.organization_member ADD FOREIGN KEY ("member_id") REFERENCES app_public.user ("id");
+-- ALTER TABLE app_public.organization_member ADD FOREIGN KEY ("member_id") REFERENCES app_public.users ("id");
 
-ALTER TABLE app_public.organization_member ADD FOREIGN KEY ("organization_id") REFERENCES app_public.organization ("id");
+-- ALTER TABLE app_public.organization_member ADD FOREIGN KEY ("organization_id") REFERENCES app_public.organizations ("id");
 
-ALTER TABLE app_public.methodology ADD FOREIGN KEY ("author_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.methodologies ADD FOREIGN KEY ("author_id") REFERENCES app_public.parties ("id");
 
-ALTER TABLE app_public.methodology_version ADD FOREIGN KEY ("id") REFERENCES app_public.methodology ("id");
+ALTER TABLE app_public.methodology_versions ADD FOREIGN KEY ("id") REFERENCES app_public.methodologies ("id");
 
-ALTER TABLE app_public.credit_class ADD FOREIGN KEY ("designer_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.credit_classes ADD FOREIGN KEY ("designer_id") REFERENCES app_public.parties ("id");
 
-ALTER TABLE app_public.credit_class ADD FOREIGN KEY ("methodology_id") REFERENCES app_public.methodology ("id");
+ALTER TABLE app_public.credit_classes ADD FOREIGN KEY ("methodology_id") REFERENCES app_public.methodologies ("id");
 
-ALTER TABLE app_public.credit_class_version ADD FOREIGN KEY ("id") REFERENCES app_public.credit_class ("id");
+ALTER TABLE app_public.credit_class_versions ADD FOREIGN KEY ("id") REFERENCES app_public.credit_classes ("id");
 
-ALTER TABLE app_public.credit_class_issuer ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_class ("id");
+ALTER TABLE app_public.credit_class_issuers ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_classes ("id");
 
-ALTER TABLE app_public.credit_class_issuer ADD FOREIGN KEY ("issuer_id") REFERENCES app_public.wallet ("id");
+ALTER TABLE app_public.credit_class_issuers ADD FOREIGN KEY ("issuer_id") REFERENCES app_public.wallets ("id");
 
-ALTER TABLE app_public.credit_vintage ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_class ("id");
+ALTER TABLE app_public.credit_vintages ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_classes ("id");
 
-ALTER TABLE app_public.credit_vintage ADD FOREIGN KEY ("project_id") REFERENCES app_public.project ("id");
+ALTER TABLE app_public.credit_vintages ADD FOREIGN KEY ("project_id") REFERENCES app_public.projects ("id");
 
-ALTER TABLE app_public.credit_vintage ADD FOREIGN KEY ("issuer_id") REFERENCES app_public.wallet ("id");
+ALTER TABLE app_public.credit_vintages ADD FOREIGN KEY ("issuer_id") REFERENCES app_public.wallets ("id");
 
-ALTER TABLE app_public.project ADD FOREIGN KEY ("developer_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.projects ADD FOREIGN KEY ("developer_id") REFERENCES app_public.parties ("id");
 
-ALTER TABLE app_public.project ADD FOREIGN KEY ("steward_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.projects ADD FOREIGN KEY ("steward_id") REFERENCES app_public.parties ("id");
 
-ALTER TABLE app_public.project ADD FOREIGN KEY ("land_owner_id") REFERENCES app_public.party ("id");
+ALTER TABLE app_public.projects ADD FOREIGN KEY ("land_owner_id") REFERENCES app_public.parties ("id");
 
-ALTER TABLE app_public.project ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_class ("id");
+ALTER TABLE app_public.projects ADD FOREIGN KEY ("credit_class_id") REFERENCES app_public.credit_classes ("id");
 
-ALTER TABLE app_public.project ADD FOREIGN KEY ("registry_id") REFERENCES app_public.registry ("id");
+ALTER TABLE app_public.projects ADD FOREIGN KEY ("registry_id") REFERENCES app_public.registries ("id");
 
-ALTER TABLE app_public.mrv ADD FOREIGN KEY ("project_id") REFERENCES app_public.project ("id");
+ALTER TABLE app_public.mrvs ADD FOREIGN KEY ("project_id") REFERENCES app_public.projects ("id");
 
-ALTER TABLE app_public.event ADD FOREIGN KEY ("project_id") REFERENCES app_public.project ("id");
+ALTER TABLE app_public.events ADD FOREIGN KEY ("project_id") REFERENCES app_public.projects ("id");
 
-CREATE INDEX ON "app_public"."account_balance"("credit_vintage_id");
-CREATE INDEX ON "app_public"."account_balance"("wallet_id");
-CREATE INDEX ON "app_public"."credit_class"("designer_id");
-CREATE INDEX ON "app_public"."credit_class"("methodology_id");
-CREATE INDEX ON "app_public"."credit_class_issuer"("credit_class_id");
-CREATE INDEX ON "app_public"."credit_vintage"("credit_class_id");
-CREATE INDEX ON "app_public"."project"("credit_class_id");
-CREATE INDEX ON "app_public"."credit_class_issuer"("issuer_id");
-CREATE INDEX ON "app_public"."credit_vintage"("project_id");
-CREATE INDEX ON "app_public"."credit_vintage"("issuer_id");
-CREATE INDEX ON "app_public"."event"("project_id");
-CREATE INDEX ON "app_public"."methodology"("author_id");
-CREATE INDEX ON "app_public"."mrv"("project_id");
-CREATE INDEX ON "app_public"."organization"("owner_id");
-CREATE INDEX ON "app_public"."organization"("wallet_id");
-CREATE INDEX ON "app_public"."organization_member"("organization_id");
-CREATE INDEX ON "app_public"."project"("developer_id");
-CREATE INDEX ON "app_public"."project"("steward_id");
-CREATE INDEX ON "app_public"."project"("land_owner_id");
-CREATE INDEX ON "app_public"."user"("wallet_id");
-CREATE INDEX ON "app_public"."organization_member"("member_id");
-CREATE INDEX ON "app_public"."project"("registry_id");
+CREATE INDEX ON "app_public"."account_balances"("credit_vintage_id");
+CREATE INDEX ON "app_public"."account_balances"("wallet_id");
+CREATE INDEX ON "app_public"."credit_classes"("designer_id");
+CREATE INDEX ON "app_public"."credit_classes"("methodology_id");
+CREATE INDEX ON "app_public"."credit_class_issuers"("credit_class_id");
+CREATE INDEX ON "app_public"."credit_vintages"("credit_class_id");
+CREATE INDEX ON "app_public"."projects"("credit_class_id");
+CREATE INDEX ON "app_public"."credit_class_issuers"("issuer_id");
+CREATE INDEX ON "app_public"."credit_vintages"("project_id");
+CREATE INDEX ON "app_public"."credit_vintages"("issuer_id");
+CREATE INDEX ON "app_public"."events"("project_id");
+CREATE INDEX ON "app_public"."methodologies"("author_id");
+CREATE INDEX ON "app_public"."mrvs"("project_id");
+CREATE INDEX ON "app_public"."organizations"("wallet_id");
+CREATE INDEX ON "app_public"."projects"("developer_id");
+CREATE INDEX ON "app_public"."projects"("steward_id");
+CREATE INDEX ON "app_public"."projects"("land_owner_id");
+CREATE INDEX ON "app_public"."users"("wallet_id");
+CREATE INDEX ON "app_public"."projects"("registry_id");
 
---CREATE UNIQUE INDEX ON app_public.party ("id", "type");
+--CREATE UNIQUE INDEX ON app_public.parties ("id", "type");
 
---COMMENT ON COLUMN "methodology_version"."metadata" IS 'eco-regions, practices/outcomes measures...';
+--COMMENT ON COLUMN "methodology_versions"."metadata" IS 'eco-regions, practices/outcomes measures...';
 
---COMMENT ON COLUMN "credit_class_version"."metadata" IS 'eco metrics, price';
+--COMMENT ON COLUMN "credit_class_versions"."metadata" IS 'eco metrics, price';
 
---COMMENT ON COLUMN "credit_vintage"."initial_distribution" IS 'breakdown of ownership of credits';
+--COMMENT ON COLUMN "credit_vintages"."initial_distribution" IS 'breakdown of ownership of credits';
 
---COMMENT ON COLUMN app_public.project."land_owner_id" IS 'constraint check_project check (developer_id is not null or owner_id is not null or steward_id is not null)';
+--COMMENT ON COLUMN app_public.projects."land_owner_id" IS 'constraint check_project check (developer_id is not null or owner_id is not null or steward_id is not null)';
 
---COMMENT ON COLUMN app_public.project."metadata" IS 'land mgmt actions, key activities/outcomes, protected species...';
+--COMMENT ON COLUMN app_public.projects."metadata" IS 'land mgmt actions, key activities/outcomes, protected species...';

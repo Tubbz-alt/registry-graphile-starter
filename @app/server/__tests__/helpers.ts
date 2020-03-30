@@ -1,17 +1,18 @@
+import { Request, Response } from "express";
+import { ExecutionResult, graphql, GraphQLSchema } from "graphql";
 import { Pool, PoolClient } from "pg";
 import {
   createPostGraphileSchema,
-  withPostGraphileContext,
   PostGraphileOptions,
+  withPostGraphileContext,
 } from "postgraphile";
-import { Request, Response } from "express";
-import { graphql, GraphQLSchema, ExecutionResult } from "graphql";
-import { getPostGraphileOptions } from "../src/middleware/installPostGraphile";
+
 import {
+  createSession,
   createUsers,
   poolFromUrl,
-  createSession,
 } from "../../__tests__/helpers";
+import { getPostGraphileOptions } from "../src/middleware/installPostGraphile";
 import handleErrors from "../src/utils/handleErrors";
 
 export * from "../../__tests__/helpers";
@@ -30,37 +31,63 @@ export async function createUserAndLogIn() {
   }
 }
 
+let known: Record<
+  string,
+  { counter: number; values: Map<unknown, string> }
+> = {};
+beforeEach(() => {
+  known = {};
+});
 /*
  * This function replaces values that are expected to change with static
  * placeholders so that our snapshot testing doesn't throw an error
  * every time we run the tests because time has ticked on in it's inevitable
  * march toward the future.
  */
-export function sanitise(json: any): any {
+export function sanitize(json: any): any {
+  /* This allows us to maintain stable references whilst dealing with variable values */
+  function mask(value: unknown, type: string) {
+    if (!known[type]) {
+      known[type] = { counter: 0, values: new Map() };
+    }
+    const o = known[type];
+    if (!o.values.has(value)) {
+      o.values.set(value, `[${type}-${++o.counter}]`);
+    }
+    return o.values.get(value);
+  }
+
   if (Array.isArray(json)) {
-    return json.map(sanitise);
+    return json.map((val) => sanitize(val));
   } else if (json && typeof json === "object") {
     const result = { ...json };
     for (const k in result) {
       if (k === "nodeId" && typeof result[k] === "string") {
-        result[k] = "[nodeId]";
+        result[k] = mask(result[k], "nodeId");
       } else if (
         k === "id" ||
-        (k.endsWith("Id") && typeof json[k] === "number")
+        k === "uuid" ||
+        (k.endsWith("Id") &&
+          (typeof json[k] === "number" || typeof json[k] === "string")) ||
+        (k.endsWith("Uuid") && typeof k === "string")
       ) {
-        result[k] = "[id]";
+        result[k] = mask(result[k], "id");
       } else if (
         (k.endsWith("At") || k === "datetime") &&
         typeof json[k] === "string"
       ) {
-        result[k] = "[timestamp]";
+        result[k] = mask(result[k], "timestamp");
       } else if (
         k.match(/^deleted[A-Za-z0-9]+Id$/) &&
         typeof json[k] === "string"
       ) {
-        result[k] = "[nodeId]";
+        result[k] = mask(result[k], "nodeId");
+      } else if (k === "email" && typeof json[k] === "string") {
+        result[k] = mask(result[k], "email");
+      } else if (k === "username" && typeof json[k] === "string") {
+        result[k] = mask(result[k], "username");
       } else {
-        result[k] = sanitise(json[k]);
+        result[k] = sanitize(json[k]);
       }
     }
     return result;
@@ -157,7 +184,7 @@ export const runGraphQLQuery = async function runGraphQLQuery(
       pgSettings,
       pgForceTransaction: true,
     },
-    async context => {
+    async (context) => {
       let checkResult;
       const { pgClient } = context;
       try {
@@ -183,7 +210,7 @@ export const runGraphQLQuery = async function runGraphQLQuery(
           } else {
             // This does a similar transform that PostGraphile does to errors.
             // It's not the same. Sorry.
-            result.errors = result.errors.map(rawErr => {
+            result.errors = result.errors.map((rawErr) => {
               const e = Object.create(rawErr);
               Object.defineProperty(e, "originalError", {
                 value: rawErr.originalError,
@@ -191,7 +218,7 @@ export const runGraphQLQuery = async function runGraphQLQuery(
               });
 
               if (e.originalError) {
-                Object.keys(e.originalError).forEach(k => {
+                Object.keys(e.originalError).forEach((k) => {
                   try {
                     e[k] = e.originalError[k];
                   } catch (err) {
@@ -213,7 +240,7 @@ export const runGraphQLQuery = async function runGraphQLQuery(
         });
 
         // You don't have to keep this, I just like knowing when things change!
-        expect(sanitise(result)).toMatchSnapshot();
+        expect(sanitize(result)).toMatchSnapshot();
 
         return checkResult == null ? result : checkResult;
       } finally {

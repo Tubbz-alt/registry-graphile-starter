@@ -1,24 +1,27 @@
+import PgSimplifyInflectorPlugin from "@graphile-contrib/pg-simplify-inflector";
+import PgPubsub from "@graphile/pg-pubsub";
+import GraphilePro from "@graphile/pro"; // Requires license key
+import { Express, Request, Response } from "express";
+import { NodePlugin } from "graphile-build";
+import { resolve } from "path";
+import { Pool } from "pg";
 import {
-  postgraphile,
-  makePluginHook,
-  PostGraphileOptions,
-  Middleware,
   enhanceHttpServerWithSubscriptions,
+  makePluginHook,
+  Middleware,
+  postgraphile,
+  PostGraphileOptions,
 } from "postgraphile";
 import { makePgSmartTagsFromFilePlugin } from "postgraphile/plugins";
-import { NodePlugin } from "graphile-build";
-import { Pool } from "pg";
-import { Express, Request, Response } from "express";
-import PgPubsub from "@graphile/pg-pubsub";
-import PgSimplifyInflectorPlugin from "@graphile-contrib/pg-simplify-inflector";
-import GraphilePro from "@graphile/pro"; // Requires license key
+
+import { getHttpServer, getWebsocketMiddlewares } from "../app";
+import OrdersPlugin from "../plugins/Orders";
 import PassportLoginPlugin from "../plugins/PassportLoginPlugin";
 import PrimaryKeyMutationsOnlyPlugin from "../plugins/PrimaryKeyMutationsOnlyPlugin";
+import RemoveQueryQueryPlugin from "../plugins/RemoveQueryQueryPlugin";
 import SubscriptionsPlugin from "../plugins/SubscriptionsPlugin";
 import handleErrors from "../utils/handleErrors";
-import { getWebsocketMiddlewares, getHttpServer } from "../app";
 import { getAuthPgPool, getRootPgPool } from "./installDatabasePools";
-import { resolve } from "path";
 
 const TagsFilePlugin = makePgSmartTagsFromFilePlugin(
   // We're using JSONC for VSCode compatibility; also using an explicit file
@@ -151,6 +154,10 @@ export function getPostGraphileOptions({
      *   https://www.graphile.org/postgraphile/extending/
      */
     appendPlugins: [
+      // PostGraphile adds a `query: Query` field to `Query` for Relay 1
+      // compatibility. We don't need that.
+      RemoveQueryQueryPlugin,
+
       // Adds support for our `postgraphile.tags.json5` file
       TagsFilePlugin,
 
@@ -165,6 +172,9 @@ export function getPostGraphileOptions({
 
       // Adds realtime features to our GraphQL schema
       SubscriptionsPlugin,
+
+      // Adds custom orders to our GraphQL schema
+      OrdersPlugin,
     ],
 
     /*
@@ -180,6 +190,9 @@ export function getPostGraphileOptions({
        * Any properties here are merged into the settings passed to each Graphile
        * Engine plugin - useful for configuring how the plugins operate.
        */
+
+      // Makes all SQL function arguments except those with defaults non-nullable
+      pgStrictFunctions: true,
     },
 
     /*
@@ -235,7 +248,7 @@ export function getPostGraphileOptions({
         // Use this to tell Passport.js we're logged in
         login: (user: any) =>
           new Promise((resolve, reject) => {
-            req.login(user, err => (err ? reject(err) : resolve()));
+            req.login(user, (err) => (err ? reject(err) : resolve()));
           }),
 
         logout: () => {

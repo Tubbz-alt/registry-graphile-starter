@@ -7,13 +7,19 @@ if (!process.env.TEST_DATABASE_URL) {
 }
 export const TEST_DATABASE_URL: string = process.env.TEST_DATABASE_URL;
 
-export type User = { id: number; _password?: string; _email?: string };
+export type User = {
+  id: string;
+  username: string;
+  _password?: string;
+  _email?: string;
+};
+export type Organization = { id: string; name: string };
 
 // Make sure we release those pgPools so that our tests exit!
 afterAll(() => {
   const keys = Object.keys(pools);
   return Promise.all(
-    keys.map(async key => {
+    keys.map(async (key) => {
       try {
         const pool = pools[key];
         delete pools[key];
@@ -38,7 +44,7 @@ export const deleteTestUsers = () => {
   const pool = poolFromUrl(TEST_DATABASE_URL);
   return pool.query(
     `
-      delete from app_public.user
+      delete from app_public.users
       where username like 'testuser%'
       or username = 'testuser'
       or id in
@@ -104,17 +110,15 @@ export const createUsers = async function createUsers(
         username := $1,
         email := $2,
         email_is_verified := $3,
-        first_name := $4,
-        last_name := $5,
-        avatar_url := $6,
-        password := $7
+        name := $4,
+        avatar_url := $5,
+        password := $6
       )`,
         [
           `testuser_${userLetter}`,
           email,
           verified,
           `User ${userLetter}`,
-          `Test ${userLetter}`,
           null,
           password,
         ]
@@ -128,11 +132,33 @@ export const createUsers = async function createUsers(
   return users;
 };
 
+export const createOrganizations = async function createOrganizations(
+  client: PoolClient,
+  count: number = 1
+) {
+  const organizations: Organization[] = [];
+  for (let i = 0; i < count; i++) {
+    const slug = `organization-${i}`;
+    const name = `Organization ${i}`;
+    const {
+      rows: [organization],
+    } = await client.query(
+      `
+        select * from app_public.create_organization($1, $2)
+      `,
+      [slug, name]
+    );
+    organizations.push(organization);
+  }
+
+  return organizations;
+};
+
 /******************************************************************************/
 
 export const createSession = async (
   client: PoolClient,
-  userId: number
+  userId: string
 ): Promise<{ uuid: string }> => {
   const {
     rows: [session],
